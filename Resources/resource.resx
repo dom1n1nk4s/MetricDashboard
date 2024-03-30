@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BUG_COUNT.Desc" xml:space="preserve">
+    <value>Bug Count represents the number of bugs reported or detected within a system or software application. It serves as a key metric for assessing software quality and identifying areas requiring improvement. Monitoring and managing bug counts help to ensure product stability, reliability, and user satisfaction.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="BUG_COUNT.Name" xml:space="preserve">
+    <value>Bug Count</value>
+    <comment>Name</comment>
+  </data>
+  <data name="BUSINESS_VALUE_PERCENTAGE.Desc" xml:space="preserve">
+    <value>Business Value Percentage represents the percentage of time spent bringing business value compared to the overall time spent on work tasks. It measures the alignment of work activities with business objectives and the proportion of effort dedicated to value-added activities. Maximizing the business value percentage helps to prioritize tasks, optimize resource allocation, and enhance organizational effectiveness.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="BUSINESS_VALUE_PERCENTAGE.Name" xml:space="preserve">
+    <value>Business Value Percentage</value>
+    <comment>Name</comment>
+  </data>
+  <data name="CHANGE_FAILURE_RATE.Desc" xml:space="preserve">
+    <value>Change Failure Rate calculates the rate of failed changes relative to the total changes attempted within a specific timeframe. It provides insights into the stability and reliability of the deployment process. A high failure rate may indicate issues such as inadequate testing, configuration errors, or complexity in deployment procedures.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="CHANGE_FAILURE_RATE.Name" xml:space="preserve">
+    <value>Change Failure Rate</value>
+    <comment>Name</comment>
+  </data>
+  <data name="CLIENT_SATISFACTION_SURVEY.Desc" xml:space="preserve">
+    <value>Client Satisfaction Survey measures the satisfaction level of clients or customers with the products or services provided by the organization. It gathers feedback from clients regarding various aspects of their experience, such as product quality, customer support, and overall satisfaction. High satisfaction levels are essential for customer retention and loyalty.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="CLIENT_SATISFACTION_SURVEY.Name" xml:space="preserve">
+    <value>Client Satisfaction Survey</value>
+    <comment>Name</comment>
+  </data>
+  <data name="CODE_INTEGRATION_TIME.Desc" xml:space="preserve">
+    <value>Code Integration Time measures the time taken to integrate code changes into a shared repository or codebase. It reflects the efficiency of the integration process and the frequency of code integration activities within a development workflow. Shorter integration times facilitate faster feedback loops and enable continuous integration practices.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="CODE_INTEGRATION_TIME.Name" xml:space="preserve">
+    <value>Code Integration Time</value>
+    <comment>Name</comment>
+  </data>
+  <data name="CODE_REVIEW_PARTICIPATION.Desc" xml:space="preserve">
+    <value>Code Review Participation measures the extent of participation in code review activities within a development team. It indicates the level of engagement and collaboration among team members in reviewing and improving code quality. Active participation in code reviews promotes knowledge sharing, code quality improvement, and adherence to best practices.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="CODE_REVIEW_PARTICIPATION.Name" xml:space="preserve">
+    <value>Code Review Participation</value>
+    <comment>Name</comment>
+  </data>
+  <data name="CODE_TASK_MERGE_COMMIT_COUNT.Desc" xml:space="preserve">
+    <value>Code Task Merge Commit Count represents the number of code task merge commits made within a specified period. It quantifies the frequency of code changes and collaboration among team members. Monitoring this metric helps to track development activity, identify bottlenecks, and assess team productivity.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="CODE_TASK_MERGE_COMMIT_COUNT.Name" xml:space="preserve">
+    <value>Code Task Merge Commit Count</value>
+    <comment>Name</comment>
+  </data>
+  <data name="DEPLOYMENT_FREQUENCY.Desc" xml:space="preserve">
+    <value>Frequency of deployments per period. This metric measures how often code changes are deployed to production within a specified time frame. It indicates the agility and efficiency of the deployment process, with higher frequencies typically associated with faster delivery cycles and shorter lead times.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="DEPLOYMENT_FREQUENCY.Name" xml:space="preserve">
+    <value>Deployment Frequency</value>
+    <comment>Name</comment>
+  </data>
+  <data name="FAILED_DEPLOYMENT_RECOVERY_TIME.Desc" xml:space="preserve">
+    <value>Failed Deployment Recovery Time measures the time taken to recover from failed deployments. It reflects the efficiency of the incident response and recovery processes following unsuccessful deployments. Minimizing this time helps to reduce downtime, mitigate impact on users, and maintain system reliability and availability.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="FAILED_DEPLOYMENT_RECOVERY_TIME.Name" xml:space="preserve">
+    <value>Failed Deployment Recovery Time</value>
+    <comment>Name</comment>
+  </data>
+  <data name="LEAD_TIME_FOR_CHANGES.Desc" xml:space="preserve">
+    <value>Lead Time for Changes represents the time taken from code commit to deployment. It measures the elapsed time between the initiation of a code change (e.g., commit or merge) and its deployment to a production environment. A shorter lead time indicates faster delivery of changes, facilitating rapid feedback and iteration.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="LEAD_TIME_FOR_CHANGES.Name" xml:space="preserve">
+    <value>Lead Time for Changes</value>
+    <comment>Name</comment>
+  </data>
+  <data name="ONBOARDING_TIME.Desc" xml:space="preserve">
+    <value>Onboarding Time represents the time taken to onboard new employees or team members. It includes activities such as orientation, training, and familiarization with company policies, processes, and tools. Effective onboarding processes help to integrate new hires into the organization smoothly, accelerate their time to productivity, and improve retention rates.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="ONBOARDING_TIME.Name" xml:space="preserve">
+    <value>Onboarding Time</value>
+    <comment>Name</comment>
+  </data>
+  <data name="SATISFACTION_SURVEY.Desc" xml:space="preserve">
+    <value>Satisfaction Survey measures user satisfaction with the product or service. It typically involves collecting feedback from users through surveys or feedback mechanisms. High satisfaction levels indicate positive user experiences, while low levels may indicate areas for improvement or dissatisfaction with the product or service.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="SATISFACTION_SURVEY.Name" xml:space="preserve">
+    <value>Satisfaction Survey</value>
+    <comment>Name</comment>
+  </data>
+  <data name="TASK_HANDOVERS_BEFORE_COMPLETION.Desc" xml:space="preserve">
+    <value>Task Handovers Before Completion quantifies the number of handovers or transfers of tasks between individuals or teams before their completion. It reflects the complexity and efficiency of task management processes and communication channels within an organization. Minimizing task handovers can reduce delays, errors, and coordination overhead.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="TASK_HANDOVERS_BEFORE_COMPLETION.Name" xml:space="preserve">
+    <value>Task Handovers Before Completion</value>
+    <comment>Name</comment>
+  </data>
+  <data name="TIME_SPENT_WORKING.Desc" xml:space="preserve">
+    <value>Time Spent Working represents the amount of time spent by individuals on work-related tasks within a specified period. It includes time allocated to various activities such as coding, debugging, meetings, and administrative tasks. Monitoring time spent working helps to optimize productivity, allocate resources efficiently, and identify potential areas for improvement.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="TIME_SPENT_WORKING.Name" xml:space="preserve">
+    <value>Time Spent Working</value>
+    <comment>Name</comment>
+  </data>
+  <data name="WORKER_RETENTION_RATE.Desc" xml:space="preserve">
+    <value>Worker Retention Rate calculates the percentage of workers retained over a specified period. It reflects the organization's ability to retain its workforce, which is crucial for maintaining institutional knowledge, productivity, and morale. A high retention rate is generally indicative of a positive work environment and effective talent management practices.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="WORKER_RETENTION_RATE.Name" xml:space="preserve">
+    <value>Worker Retention Rate</value>
+    <comment>Name</comment>
+  </data>
+  <data name="WORKFLOW_INTERRUPTION_TIME.Desc" xml:space="preserve">
+    <value>Workflow Interruption Time measures the time spent handling interruptions or disruptions to workflow activities. It includes interruptions such as meetings, emails, phone calls, and other distractions that divert attention from primary tasks. Minimizing workflow interruption time helps to improve focus, productivity, and task completion rates.</value>
+    <comment>Description</comment>
+  </data>
+  <data name="WORKFLOW_INTERRUPTION_TIME.Name" xml:space="preserve">
+    <value>Workflow Interruption Time</value>
+    <comment>Name</comment>
+  </data>
+</root>
