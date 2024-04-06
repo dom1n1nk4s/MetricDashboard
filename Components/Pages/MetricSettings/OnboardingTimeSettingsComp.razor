@@ -15,11 +15,12 @@
                 <RadzenAutoComplete @bind-Value=@onboardingTaskInput Data=@issues LoadData=@OnLoadData Style="width: 13rem" />
             </RadzenColumn>
         </RadzenRow>
-        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="Save" />
     </RadzenStack>
 </RadzenFieldset>
 
 @code {
+    [CascadingParameter]
+    EventHandler _saveAllEvent { get; set; }
 
     MetricEnum _metricType => MetricEnum.ONBOARDING_TIME;
     string onboardingTaskInput { get; set; }
@@ -40,13 +41,19 @@
     {
         try
         {
+            if(_jira.Issues.GetIssueAsync(onboardingTaskInput).GetAwaiter().GetResult() == null)
+            {
+                _notificationService.NotifyError("Invalid Onboarding task id entered.");
+                return;
+            }
+
             _context ??= _dbFactory.CreateDbContext();
 
             var metricDao = _context.Metrics.First(x => x.MetricEnum == _metricType);
             var settings = metricDao.Settings?.Deserialize<OnboardingTimeSettings>() ?? new OnboardingTimeSettings();
             settings.OnboardingTaskId = onboardingTaskInput;
             metricDao.Settings = settings.Serialize();
-            _context.SaveChanges(); //TODO: think of a reusable solution, where i only need to call SaveChanges in the parent and all of the children entries will auto be saved
+            _context.SaveChanges(); //this might cause problems later on when saving a shit ton of data at once
         }
         catch (Exception e)
         {
@@ -58,6 +65,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _saveAllEvent += (o, e) => { Save(); };
         _jira = _jiraService.GetInstance();
         try
         {
@@ -73,9 +81,9 @@
         }
         await base.OnInitializedAsync();
     }
+
     void IDisposable.Dispose()
     {
         _context?.Dispose();
     }
-    //inject jira here and try search for autocomplete
 }

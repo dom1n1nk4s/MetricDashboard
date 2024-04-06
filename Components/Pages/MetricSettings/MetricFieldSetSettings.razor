@@ -1,6 +1,13 @@
 ﻿<RadzenStack>
-    <OnboardingTimeSettingsComp/>
+    <CascadingValue Value="_saveAllEvent">
+        <OnboardingTimeSettingsComp />
+    </CascadingValue>
 </RadzenStack>
+<RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="SaveAll" />
 @code {
-
+    EventHandler _saveAllEvent;
+    void SaveAll()
+    {
+        _saveAllEvent?.Invoke(this, EventArgs.Empty);
+    }
 }

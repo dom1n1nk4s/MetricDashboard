@@ -3,6 +3,7 @@ using MetricDashboard.Components.Account;
 using MetricDashboard.Data;
 using MetricDashboard.Models;
 using MetricDashboard.Scraper;
+using MetricDashboard.Scraper.MetricScrapers;
 using MetricDashboard.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +30,24 @@ namespace MetricDashboard
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
             builder.Services.AddSingleton<JiraService>();
             builder.Services.AddSingleton<BitBucketService>();
+
+            builder.Services.AddSingleton<IMetricCalculator, DeployFreqCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, LeadTimeCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, FailedRecoveryCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, ChangeFailureCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, SatSurveyCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, WorkerRetRateCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, BugCountCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, ClientSatSurveyCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, CodeTaskMergeCountCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, CodeReviewPartCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, TimeSpentWorkCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, CodeIntegTimeCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, OnboardingTimeCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, TaskHandoverCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, WorkflowIntCalculator>();
+            builder.Services.AddSingleton<IMetricCalculator, BusinessValuePercCalculator>();
+
             builder.Services.AddRadzenComponents();
             builder.Services.AddAuthentication(options =>
                 {

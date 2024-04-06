@@ -36,4 +36,8 @@
 			<LastGenOutput>Resources.en-US.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Helpers\" />
+	</ItemGroup>
 </Project>

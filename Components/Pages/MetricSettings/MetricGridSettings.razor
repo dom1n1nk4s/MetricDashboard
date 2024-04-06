@@ -3,9 +3,9 @@
 @inject IStringLocalizer<Locales.Resources> L
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 
-<RadzenDataList WrapItems="true" AllowPaging="false" Data="@metrics" TItem="MetricMiniInfo">
+<RadzenDataList WrapItems="true" AllowPaging="false" Data="@metrics" TItem="MetricMiniInfo" >
     <Template Context="metric">
-        <RadzenCard Style="width:300px; cursor:pointer;" @onclick="@(e => ToggleMetric(metric))">
+        <RadzenCard Style="width:300px; cursor:pointer;" class="@(metric.IsDisabled ? "opacity-50" : "")" @onclick="@(e => ToggleMetric(metric))">
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" >
                 <RadzenColumn Size="8">
                     <RadzenText Text="@metric.Name" />
@@ -69,7 +69,7 @@
                         MetricEnum = x.MetricEnum,
                         MetricSystemEnum = x.System,
 
-                    }).ToArray();
+                    }).AsEnumerable().OrderBy(x => x.MetricSystemEnum).ThenBy(x => x.Name).ToArray();
             }
         }
         catch (Exception e)

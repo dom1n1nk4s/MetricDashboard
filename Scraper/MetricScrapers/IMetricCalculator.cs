@@ -1,10 +1,12 @@
 ﻿using Atlassian.Jira;
 using MetricDashboard.Data;
+using MetricDashboard.Data.Enums;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
     public interface IMetricCalculator
     {
-        public void Calculate(ApplicationDbContext dbcontext, Jira jira);
+        public MetricEnum MetricEnum { get; }
+        public void Calculate();
     }
 }
