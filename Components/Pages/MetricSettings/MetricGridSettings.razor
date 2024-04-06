@@ -1,0 +1,81 @@
+﻿@using Microsoft.Extensions.Localization
+@rendermode InteractiveServer
+@inject IStringLocalizer<Locales.Resources> L
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<RadzenDataList WrapItems="true" AllowPaging="false" Data="@metrics" TItem="MetricMiniInfo">
+    <Template Context="metric">
+        <RadzenCard Style="width:300px; cursor:pointer;" @onclick="@(e => ToggleMetric(metric))">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" >
+                <RadzenColumn Size="8">
+                    <RadzenText Text="@metric.Name" />
+                </RadzenColumn>
+                <RadzenColumn Size="2">
+                    <RadzenSwitch @bind-Value=@metric.IsEnabled InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Switch value" }})" />
+                </RadzenColumn>
+            </RadzenStack>
+            <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
+            <RadzenStack >
+                <div class="mini-tag" style="background-color: @(metric.MetricSystemEnum == MetricSystemEnum.DORA ? "blue;" : "green;" )">@metric.MetricSystemEnum.ToString()</div>
+            </RadzenStack>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+
+<style>
+    .mini-tag {
+        display: inline-block;
+        padding: 5px 10px;
+        color: #fff;
+        font-size: 12px;
+        border-radius: 10px;
+        width:min-content
+    }
+</style>
+@code {
+    class MetricMiniInfo
+    {
+        public string Name { get; set; }
+        public bool IsDisabled { get; set; }
+        public bool IsEnabled { get => !IsDisabled; set {IsDisabled = !value;} }
+        public MetricEnum MetricEnum { get; set; }
+        public MetricSystemEnum MetricSystemEnum { get; set; }
+    }
+
+    void ToggleMetric(MetricMiniInfo metric)
+    {
+        metric.IsDisabled = !metric.IsDisabled;
+        _context ??= DbFactory.CreateDbContext();
+        var dbMetric = _context.Metrics.First(x => x.MetricEnum == metric.MetricEnum);
+        dbMetric.IsDisabled = metric.IsDisabled;
+        _context.SaveChanges();
+    }
+    MetricMiniInfo[] metrics;
+
+    ApplicationDbContext _context;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _context = DbFactory.CreateDbContext();
+
+            if (_context is not null && _context.Metrics is not null)
+            {
+                metrics = _context.Metrics.AsNoTracking().Select(x => new MetricMiniInfo
+                    {
+                        Name = @L[x.MetricEnum + ".Name"],
+                        IsDisabled = x.IsDisabled,
+                        MetricEnum = x.MetricEnum,
+                        MetricSystemEnum = x.System,
+
+                    }).ToArray();
+            }
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+        await base.OnInitializedAsync();
+    }
+}

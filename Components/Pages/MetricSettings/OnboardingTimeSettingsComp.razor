@@ -1,0 +1,81 @@
+﻿@using MetricDashboard.Services
+@implements IDisposable
+@inject NavigationManager _navigation
+@inject NotificationService _notificationService
+@inject IDbContextFactory<ApplicationDbContext> _dbFactory
+@inject JiraService _jiraService
+
+<RadzenFieldset Text="Onboarding time" AllowCollapse=true>
+    <RadzenStack>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Onboarding related task" Component="taskInput" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenAutoComplete @bind-Value=@onboardingTaskInput Data=@issues LoadData=@OnLoadData Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="Save" />
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+
+    MetricEnum _metricType => MetricEnum.ONBOARDING_TIME;
+    string onboardingTaskInput { get; set; }
+    ApplicationDbContext _context;
+
+    Atlassian.Jira.Jira _jira;
+    IEnumerable<string> issues;
+
+    async Task OnLoadData(LoadDataArgs args)
+    {
+        if (!string.IsNullOrWhiteSpace(args.Filter))
+        {
+            issues = _jira.Issues.Queryable.Where(x => x.JiraIdentifier.StartsWith(args.Filter)).Select(x => x.Key.Value).ToList();
+        }
+    }
+
+    void Save()
+    {
+        try
+        {
+            _context ??= _dbFactory.CreateDbContext();
+
+            var metricDao = _context.Metrics.First(x => x.MetricEnum == _metricType);
+            var settings = metricDao.Settings?.Deserialize<OnboardingTimeSettings>() ?? new OnboardingTimeSettings();
+            settings.OnboardingTaskId = onboardingTaskInput;
+            metricDao.Settings = settings.Serialize();
+            _context.SaveChanges(); //TODO: think of a reusable solution, where i only need to call SaveChanges in the parent and all of the children entries will auto be saved
+        }
+        catch (Exception e)
+        {
+            _notificationService.NotifyError("Failed to save settings!");
+            throw;
+        }
+
+        _notificationService.NotifySuccess("Successfully saved settings!");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        _jira = _jiraService.GetInstance();
+        try
+        {
+            _context ??= _dbFactory.CreateDbContext();
+
+            onboardingTaskInput = _context.Metrics.First(x => x.MetricEnum == _metricType)
+            .Settings?.Deserialize<OnboardingTimeSettings>()?.OnboardingTaskId ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            _notificationService.NotifyError("Failed to load settings!");
+            throw;
+        }
+        await base.OnInitializedAsync();
+    }
+    void IDisposable.Dispose()
+    {
+        _context?.Dispose();
+    }
+    //inject jira here and try search for autocomplete
+}

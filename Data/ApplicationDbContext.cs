@@ -2,6 +2,7 @@ using MetricDashboard.Data.Enums;
 using MetricDashboard.Data.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace MetricDashboard.Data
 {
@@ -14,8 +15,10 @@ namespace MetricDashboard.Data
             base.OnModelCreating(builder);
             builder.Entity<Metric>()
                 .HasKey(x => x.MetricEnum);
-
-            SeedData(builder);
+            if (Database.GetPendingMigrations().Any())
+            {
+                SeedData(builder);
+            }
         }
         private void SeedData(ModelBuilder builder)
         {

@@ -1,10 +1,13 @@
 using MetricDashboard.Components;
 using MetricDashboard.Components.Account;
 using MetricDashboard.Data;
+using MetricDashboard.Models;
 using MetricDashboard.Scraper;
+using MetricDashboard.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Radzen;
 
 namespace MetricDashboard
 {
@@ -15,15 +18,18 @@ namespace MetricDashboard
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddLocalization();
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
-
+            builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
             builder.Services.AddHostedService<Worker>();
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-
+            builder.Services.AddSingleton<JiraService>();
+            builder.Services.AddSingleton<BitBucketService>();
+            builder.Services.AddRadzenComponents();
             builder.Services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -32,7 +38,7 @@ namespace MetricDashboard
                 .AddIdentityCookies();
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -45,6 +51,12 @@ namespace MetricDashboard
 
             var app = builder.Build();
 
+            string[] supportedCultures = ["en-US"];
+            var localizationOptions = new RequestLocalizationOptions()
+                .SetDefaultCulture(supportedCultures[0])
+                .AddSupportedCultures(supportedCultures)
+                .AddSupportedUICultures(supportedCultures);
+            app.UseRequestLocalization(localizationOptions);
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

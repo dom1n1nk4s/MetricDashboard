@@ -1,4 +1,5 @@
 ﻿@using MetricDashboard.Components.Account.Shared
+@using MetricDashboard.Components.Pages
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
@@ -8,4 +9,7 @@
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <NotFoundPage/>
+    </NotFound>
 </Router>

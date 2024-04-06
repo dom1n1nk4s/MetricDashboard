@@ -1,0 +1,18 @@
+﻿@page "/metric-settings/{_metricName}"
+@using MetricDashboard.Data.Enums
+@inject NavigationManager _navigation
+
+
+
+@code {
+    [Parameter]
+    public string _metricName { get; set; }
+    MetricEnum _metricType;
+    protected override void OnParametersSet()
+    {
+        if (!Enum.TryParse<MetricEnum>(_metricName, true, out _metricType))
+        {
+            _navigation.NavigateTo("/404");
+        }
+    }
+}

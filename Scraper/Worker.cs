@@ -1,6 +1,7 @@
 ﻿using Atlassian.Jira;
 using MetricDashboard.Data;
 using MetricDashboard.Helpers;
+using MetricDashboard.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,11 +11,13 @@ namespace MetricDashboard.Scraper
     {
         private readonly ILogger<Worker> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly Jira _jira;
 
-        public Worker(ILogger<Worker> logger, IServiceScopeFactory serviceScopeFactory)
+        public Worker(ILogger<Worker> logger, IServiceScopeFactory serviceScopeFactory, JiraService jiraService)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+            _jira = jiraService.GetInstance();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,12 +42,10 @@ namespace MetricDashboard.Scraper
                 var metricDAOs = context.Metrics.AsNoTracking().Where(x => !x.IsDisabled).ToList();
                 foreach (var metric in metricDAOs)
                 {
-                    MetricHelper.GetMetricCalculator(metric.MetricEnum).Calculate(context);
+                    MetricHelper.GetMetricCalculator(metric.MetricEnum).Calculate(context, _jira);
                 }
+                //TODO: calculate system scores here
             }
-
-            //var jira = Jira.CreateRestClient("https://productivity-metrics-testing.atlassian.net/", "domininkas.stankevicius@stud.vilniustech.lt", "ATATT3xFfGF0VZCGbZ6lJtnU6AwllpPSGffV0TG-8Df1yrGiLelGQF4RZpo7lOCv8x82zC8DCsexT4CMBQi7gj3Cxf8ygtnYLyXRVC9EN3ifz6X-cSUHUQxoNMD4o5a0V9LLU9APOsShkFVUSAN_wKtnpqKNpGHuXVF5YqH9EAcKU9J2IZS4X3E=277107C6");
-            //var issues = jira.Issues.Queryable.ToArray();
         }
     }
 }

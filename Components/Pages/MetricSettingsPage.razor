@@ -1,0 +1,42 @@
+﻿@page "/metric-settings"
+@using MetricDashboard.Data
+@using MetricDashboard.Data.Enums
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Localization
+@using System.Globalization
+
+@rendermode InteractiveServer
+@inject IStringLocalizer<Locales.Resources> L
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager _navigation
+
+<RadzenTabs>
+    <Tabs>
+        <RadzenTabsItem Text="Metrics">
+            <MetricDashboard.Components.Pages.MetricSettings.MetricGridSettings />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Settings">
+            <MetricDashboard.Components.Pages.MetricSettings.MetricFieldSetSettings />
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+
+@code {
+
+    ApplicationDbContext _context;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _context = DbFactory.CreateDbContext();
+
+
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+        await base.OnInitializedAsync();
+    }
+}
