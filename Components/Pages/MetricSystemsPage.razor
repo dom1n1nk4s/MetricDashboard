@@ -1,0 +1,48 @@
+﻿@page "/metric-systems"
+@rendermode InteractiveServer
+@inject IDbContextFactory<ApplicationDbContext> _dbFactory
+<RadzenDataList WrapItems="true" AllowPaging="false" Data="@systems" TItem="SystemMiniInfo">
+    <Template Context="system">
+        <RadzenCard Style="width:300px;" class="@(system.EnabledMetricCount == 0 ? "opacity-50" : "")">
+            <NavLink class="nav-link" href="@GetLink(system.Name)">
+                <RadzenText Text="@system.Score.ToString("N1")" />
+                <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
+                <RadzenText Text="@system.Name" />
+            </NavLink>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+@code {
+    string GetLink(string m) => $"metric-systems/{m}";
+
+    class SystemMiniInfo
+    {
+        public string Name { get; set; }
+        public double Score { get; set; }
+        public int EnabledMetricCount { get; set; }
+    }
+    SystemMiniInfo[] systems = Array.Empty<SystemMiniInfo>();
+    ApplicationDbContext _context;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _context = _dbFactory.CreateDbContext();
+
+            if (_context is not null && _context.Metrics is not null)
+            {
+                systems = _context.Metrics.AsNoTracking().GroupBy(x => x.System).Select(x => new SystemMiniInfo
+                    {
+                        Name = x.Key.ToString(),
+                        EnabledMetricCount = x.Count(y => !y.IsDisabled),
+                        // Score = ...
+                    }).AsEnumerable().OrderBy(x => x.Name).ToArray();
+            }
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+    }
+}

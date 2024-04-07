@@ -30,7 +30,7 @@
 
     protected override void OnParametersSet()
     {
-        if(!Enum.TryParse<MetricEnum>(_metricName, true, out _metricType))
+        if (!Enum.TryParse<MetricEnum>(_metricName, true, out _metricType))
         {
             _navigation.NavigateTo("/404");
         }

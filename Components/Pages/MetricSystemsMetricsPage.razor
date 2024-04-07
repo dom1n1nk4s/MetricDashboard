@@ -1,0 +1,64 @@
+﻿@page "/metric-systems/{_metricSystemName}"
+@using Microsoft.Extensions.Localization
+@rendermode InteractiveServer
+@inject NavigationManager _navigation
+@inject IDbContextFactory<ApplicationDbContext> _dbFactory
+@inject IStringLocalizer<Locales.Resources> L
+
+
+<RadzenDataList WrapItems="true" AllowPaging="false" Data="@metrics" TItem="MetricMiniInfo">
+    <Template Context="metric">
+        <RadzenCard Style="width:300px;" class="@(metric.IsDisabled ? "opacity-50" : "")">
+            <NavLink class="nav-link" href="@GetMetricLink(metric.MetricEnum)">
+            <RadzenText Text="@metric.Name" />
+
+        
+            <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
+            </NavLink>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+
+
+@code {
+    string GetMetricLink(MetricEnum m) => $"/metrics/{m}";
+    [Parameter]
+    public string _metricSystemName { get; set; }
+    MetricSystemEnum _systemType;
+
+    class MetricMiniInfo
+    {
+        public string Name { get; set; }
+        public MetricEnum MetricEnum { get; set; }
+        // public RadialValues RadialValues { get; set; }
+        public bool IsDisabled { get; set; }
+    }
+    MetricMiniInfo[] metrics;
+    protected override void OnParametersSet()
+    {
+        if (!Enum.TryParse<MetricSystemEnum>(_metricSystemName, true, out _systemType))
+        {
+            _navigation.NavigateTo("/404");
+        }
+
+        try
+        {
+            using var _context = _dbFactory.CreateDbContext();
+
+            if (_context is not null && _context.Metrics is not null)
+            {
+                metrics = _context.Metrics.AsNoTracking().Where(x => x.System == _systemType).Select(x => new MetricMiniInfo
+                    {
+                        Name = @L[x.MetricEnum.ToString() + ".Name"],
+                        // RadialValues = ...
+                        IsDisabled = x.IsDisabled,
+                        MetricEnum = x.MetricEnum,
+                    }).AsEnumerable().OrderBy(x => x.Name).ToArray();
+            }
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+    }
+}

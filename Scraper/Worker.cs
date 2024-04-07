@@ -43,7 +43,7 @@ namespace MetricDashboard.Scraper
                 {
                     if (!calc.Second.IsDisabled)
                     {
-                        calc.First.Calculate();
+                        //calc.First.Calculate();
                     }
                 }
                 //TODO: calculate system scores here
