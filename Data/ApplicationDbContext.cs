@@ -9,12 +9,21 @@ namespace MetricDashboard.Data
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
         public virtual DbSet<Metric> Metrics { get; set; }
-
+        public virtual DbSet<RadialSettings> RadialSettings { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.Entity<Metric>()
                 .HasKey(x => x.MetricEnum);
+
+            builder.Entity<Metric>()
+                .HasOne(x => x.RadialSettings)
+                .WithOne()
+                .HasForeignKey<RadialSettings>(x=>x.MetricEnum);              
+
+
+
             if (Database.GetPendingMigrations().Any())
             {
                 SeedData(builder);

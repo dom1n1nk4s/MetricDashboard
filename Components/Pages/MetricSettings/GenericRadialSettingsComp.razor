@@ -1,0 +1,31 @@
+﻿@using MetricDashboard.Data.Models
+<RadzenStack Style="margin-bottom: 16px;">
+    <RadzenLabel Text="Green Range"></RadzenLabel>
+    <RadzenNumeric @bind-Value="@RadialSettings.GreenRange"></RadzenNumeric>
+</RadzenStack>
+
+<RadzenStack Style="margin-bottom: 16px;">
+    <RadzenLabel Text="Yellow Range"></RadzenLabel>
+    <RadzenNumeric @bind-Value="@RadialSettings.YellowRange"></RadzenNumeric>
+</RadzenStack>
+
+<RadzenStack Style="margin-bottom: 16px;">
+    <RadzenLabel Text="Red Range"></RadzenLabel>
+    <RadzenNumeric @bind-Value="@RadialSettings.RedRange"></RadzenNumeric>
+</RadzenStack>
+
+<RadzenStack Style="margin-bottom: 16px;">
+    <RadzenLabel Text="Length"></RadzenLabel>
+    <RadzenNumeric @bind-Value="@RadialSettings.Length"></RadzenNumeric>
+</RadzenStack>
+@if(RadialSettings.GetRanges().Last().range < RadialSettings.Length)
+{
+    <div class="warning-message" style="color: red;">
+        Warning: Ensure the largest range is not set lower than the total length, as metric calculations will not work and settings may not be saved.
+    </div>
+}
+<RadialComponent Style="width: 100%; height:300px;" Ranges="RadialSettings.GetRanges()" Length="RadialSettings.Length" />
+@code {
+    [Parameter,EditorRequired]
+    public RadialSettings RadialSettings { get; set; } 
+}
