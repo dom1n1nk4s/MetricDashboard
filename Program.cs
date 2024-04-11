@@ -58,7 +58,10 @@ namespace MetricDashboard
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+            {
+                options.EnableSensitiveDataLogging(true);
+                options.UseSqlServer(connectionString);
+            });
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)

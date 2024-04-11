@@ -10,6 +10,7 @@ namespace MetricDashboard.Data
     {
         public virtual DbSet<Metric> Metrics { get; set; }
         public virtual DbSet<RadialSettings> RadialSettings { get; set; }
+        public virtual DbSet<ColorRange> ColorRanges { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -20,14 +21,21 @@ namespace MetricDashboard.Data
             builder.Entity<Metric>()
                 .HasOne(x => x.RadialSettings)
                 .WithOne()
-                .HasForeignKey<RadialSettings>(x=>x.MetricEnum);              
+                .HasForeignKey<RadialSettings>(x => x.MetricEnum);
+
+            builder.Entity<RadialSettings>()
+                .HasKey(x => x.Id);
+
+            builder.Entity<ColorRange>()
+                .HasKey(x => x.Id);
+
+            builder.Entity<RadialSettings>()
+                .HasMany(x => x.ColorRanges)
+                .WithOne()
+                .HasForeignKey(x => x.RadialSettingsId);
 
 
-
-            if (Database.GetPendingMigrations().Any())
-            {
-                SeedData(builder);
-            }
+            SeedData(builder);
         }
         private void SeedData(ModelBuilder builder)
         {
@@ -60,6 +68,7 @@ namespace MetricDashboard.Data
                 new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.WORKFLOW_INTERRUPTION_TIME },
                 new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.BUSINESS_VALUE_PERCENTAGE }
             ]);
+            //TODO: export db and run sql scripts for seeding radialsettings and color ranges. cant be bothered to do it in c#
         }
     }
 }

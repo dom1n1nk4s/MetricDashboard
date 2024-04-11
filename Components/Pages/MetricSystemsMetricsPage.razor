@@ -1,4 +1,5 @@
 ﻿@page "/metric-systems/{_metricSystemName}"
+@using MetricDashboard.Data.Models
 @using Microsoft.Extensions.Localization
 @rendermode InteractiveServer
 @inject NavigationManager _navigation
@@ -10,10 +11,9 @@
     <Template Context="metric">
         <RadzenCard Style="width:300px;" class="@(metric.IsDisabled ? "opacity-50" : "")">
             <NavLink class="nav-link" href="@GetMetricLink(metric.MetricEnum)">
-            <RadzenText Text="@metric.Name" />
-
-        
-            <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
+                <RadialComponent Style="width: 100%; height:300px;" Settings="@metric.RadialSettings" />
+                <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
+                <RadzenText Text="@metric.Name" />
             </NavLink>
         </RadzenCard>
     </Template>
@@ -30,7 +30,7 @@
     {
         public string Name { get; set; }
         public MetricEnum MetricEnum { get; set; }
-        // public RadialValues RadialValues { get; set; }
+        public RadialSettings RadialSettings{ get; set; }
         public bool IsDisabled { get; set; }
     }
     MetricMiniInfo[] metrics;
@@ -47,10 +47,10 @@
 
             if (_context is not null && _context.Metrics is not null)
             {
-                metrics = _context.Metrics.AsNoTracking().Where(x => x.System == _systemType).Select(x => new MetricMiniInfo
+                metrics = _context.Metrics.Include(x=>x.RadialSettings).ThenInclude(x=>x.ColorRanges).AsNoTracking().Where(x => x.System == _systemType).Select(x => new MetricMiniInfo
                     {
                         Name = @L[x.MetricEnum.ToString() + ".Name"],
-                        // RadialValues = ...
+                        RadialSettings = x.RadialSettings,
                         IsDisabled = x.IsDisabled,
                         MetricEnum = x.MetricEnum,
                     }).AsEnumerable().OrderBy(x => x.Name).ToArray();

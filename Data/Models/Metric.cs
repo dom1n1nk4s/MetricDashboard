@@ -8,6 +8,6 @@ namespace MetricDashboard.Data.Models
         public bool IsDisabled { get; set; }
         public string Settings { get; set; } = string.Empty;
         public MetricSystemEnum System { get; set; }
-        public RadialSettings RadialSettings { get; set; } = new();
+        public RadialSettings RadialSettings { get; set; }
     }
 }

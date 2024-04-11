@@ -1,39 +1,35 @@
 ﻿@using System.Collections.Generic
+@using MetricDashboard.Data.Models
 @using Radzen.Blazor
 
 <RadzenRadialGauge Style="@Style">
-    <RadzenRadialGaugeScale StartAngle="-150" EndAngle="150" Step="@(Length/10)" Min="0" Max="@Length" TickPosition=GaugeTickPosition.Inside>
-        <RadzenRadialGaugeScalePointer Value="@PointerValue" Length="0.6" ShowValue="true">
+    <RadzenRadialGaugeScale StartAngle="-150" EndAngle="150" Step="@Settings.Step" Min="@Settings.Start"
+                            Max="@Settings.End" TickPosition=GaugeTickPosition.Inside>
+        <RadzenRadialGaugeScalePointer Value="@Settings.Value" Length="0.6" ShowValue="true">
             <Template Context="pointer">
                 <h4>
-                    @pointer.Value
+                    @Settings.Value <sub>@Settings.PointerUnits</sub>
                 </h4>
             </Template>
         </RadzenRadialGaugeScalePointer>
         @{
-            int previousRangeTo = 0;
-            foreach (var range in Ranges)
+            foreach (var colorRange in Settings.ColorRanges)
             {
-                int fromValue = previousRangeTo;
-                int toValue = range.range;
-                previousRangeTo = toValue;
-                <RadzenRadialGaugeScaleRange From="@fromValue" To="@toValue" Fill="@range.color" />
+                <RadzenRadialGaugeScaleRange From="@colorRange.From" To="@colorRange.To" Fill="@colorRange.Color.ToString()" />
             }
         }
     </RadzenRadialGaugeScale>
 </RadzenRadialGauge>
 
-@code { //TODO: implement color from and to setting saving with possible multiple values.
-    // also implement scoring overrides (onboarding time yellow is worth 7 or smth.)
+@code {
+    //TODO: implement scoring overrides (onboarding time yellow is worth 7 or smth.)
     [Parameter]
-    public int Length { get; set; } = 260;
-
-    [Parameter]
-    public (string color, int range)[] Ranges { get; set; }
-
-    [Parameter]
-    public int PointerValue { get; set; }
-
+    public RadialSettings Settings { get; set; }
     [Parameter]
     public string Style { get; set; }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Settings ??= new();
+    }
 }

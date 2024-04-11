@@ -1,13 +1,20 @@
-﻿<RadzenStack>
-    <CascadingValue Value="_saveAllEvent">
+﻿@inject NotificationService _notificationService
+<RadzenStack>
+    <CascadingValue Value="saveState">
         <OnboardingTimeSettingsComp />
     </CascadingValue>
 </RadzenStack>
 <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="SaveAll" />
 @code {
-    EventHandler _saveAllEvent;
+    public class SaveState
+    {
+        public EventHandler OnSaveEvent;
+
+    }
+    SaveState saveState = new();
     void SaveAll()
     {
-        _saveAllEvent?.Invoke(this, EventArgs.Empty);
+        saveState.OnSaveEvent.Invoke(this, EventArgs.Empty);
+        _notificationService.NotifySuccess("Successfully saved settings!");
     }
 }

@@ -11,7 +11,7 @@
                     <RadzenText Text="@metric.Name" />
                 </RadzenColumn>
                 <RadzenColumn Size="2">
-                    <RadzenSwitch @bind-Value=@metric.IsEnabled InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Switch value" }})" />
+                    <RadzenSwitch Disabled=true @bind-Value=@metric.IsEnabled InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Switch value" }})" />
                 </RadzenColumn>
             </RadzenStack>
             <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />

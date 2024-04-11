@@ -4,6 +4,7 @@ using MetricDashboard.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MetricDashboard.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240411144353_AddedRadialSettings")]
+    partial class AddedRadialSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,13 +98,16 @@ namespace MetricDashboard.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Color")
-                        .HasColumnType("int");
-
                     b.Property<int>("From")
                         .HasColumnType("int");
 
                     b.Property<int>("RadialSettingsId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RadialSettingsId1")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RadialSettingsId2")
                         .HasColumnType("int");
 
                     b.Property<int>("To")
@@ -110,6 +116,10 @@ namespace MetricDashboard.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RadialSettingsId");
+
+                    b.HasIndex("RadialSettingsId1");
+
+                    b.HasIndex("RadialSettingsId2");
 
                     b.ToTable("ColorRanges");
                 });
@@ -419,10 +429,18 @@ namespace MetricDashboard.Migrations
             modelBuilder.Entity("MetricDashboard.Data.Models.ColorRange", b =>
                 {
                     b.HasOne("MetricDashboard.Data.Models.RadialSettings", null)
-                        .WithMany("ColorRanges")
+                        .WithMany("RedRanges")
                         .HasForeignKey("RadialSettingsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("MetricDashboard.Data.Models.RadialSettings", null)
+                        .WithMany("GreenRanges")
+                        .HasForeignKey("RadialSettingsId1");
+
+                    b.HasOne("MetricDashboard.Data.Models.RadialSettings", null)
+                        .WithMany("YellowRanges")
+                        .HasForeignKey("RadialSettingsId2");
                 });
 
             modelBuilder.Entity("MetricDashboard.Data.Models.RadialSettings", b =>
@@ -493,7 +511,11 @@ namespace MetricDashboard.Migrations
 
             modelBuilder.Entity("MetricDashboard.Data.Models.RadialSettings", b =>
                 {
-                    b.Navigation("ColorRanges");
+                    b.Navigation("GreenRanges");
+
+                    b.Navigation("RedRanges");
+
+                    b.Navigation("YellowRanges");
                 });
 #pragma warning restore 612, 618
         }

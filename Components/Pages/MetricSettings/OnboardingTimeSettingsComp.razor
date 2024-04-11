@@ -1,10 +1,13 @@
 ﻿@using MetricDashboard.Data.Models
 @using MetricDashboard.Services
+@using Microsoft.Extensions.Localization
+@using static MetricDashboard.Components.Pages.MetricSettings.MetricFieldSetSettings
 @implements IDisposable
 @inject NavigationManager _navigation
 @inject NotificationService _notificationService
 @inject IDbContextFactory<ApplicationDbContext> _dbFactory
 @inject JiraService _jiraService
+@inject IStringLocalizer<Locales.Resources> L
 
 <RadzenFieldset Text="Onboarding time" AllowCollapse=true>
     <RadzenStack>
@@ -16,19 +19,17 @@
                 <RadzenAutoComplete @bind-Value=@onboardingTaskInput Data=@issues LoadData=@OnLoadData Style="width: 13rem" />
             </RadzenColumn>
         </RadzenRow>
-        <GenericRadialSettingsComp RadialSettings="RadialSettings" />
+        <GenericRadialSettingsComp MetricEnum="_metricType" />
     </RadzenStack>
 </RadzenFieldset>
 
 @code {
     [CascadingParameter]
-    EventHandler _saveAllEvent { get; set; }
-
+    public SaveState SaveState { get; set; }
+    string name => @L[_metricType.ToString() + ".Name"];
     MetricEnum _metricType => MetricEnum.ONBOARDING_TIME;
     string onboardingTaskInput { get; set; }
     ApplicationDbContext _context;
-
-    RadialSettings RadialSettings;
 
     Atlassian.Jira.Jira _jira;
     IEnumerable<string> issues;
@@ -37,7 +38,7 @@
     {
         if (!string.IsNullOrWhiteSpace(args.Filter))
         {
-            issues = _jira.Issues.Queryable.Where(x => x.JiraIdentifier.StartsWith(args.Filter)).Select(x => x.Key.Value).ToList();
+            issues = _jira.Issues.Queryable.Where(x => x.JiraIdentifier.StartsWith(args.Filter)).AsEnumerable().Select(x => x.Key.Value).ToList();
         }
     }
 
@@ -45,42 +46,43 @@
     {
         try
         {
-            if(_jira.Issues.GetIssueAsync(onboardingTaskInput).GetAwaiter().GetResult() == null)
+            if (_jira.Issues.Queryable.FirstOrDefault(x => x.Key == onboardingTaskInput) == null)
             {
-                _notificationService.NotifyError("Invalid Onboarding task id entered.");
+                _notificationService.NotifyError(name, "Invalid Onboarding task id entered.");
                 return;
             }
 
             _context ??= _dbFactory.CreateDbContext();
 
             var metricDao = _context.Metrics.First(x => x.MetricEnum == _metricType);
-            var settings = metricDao.Settings?.Deserialize<OnboardingTimeSettings>() ?? new OnboardingTimeSettings();
+            var settings = metricDao.Settings?.Deserialize<OnboardingTimeSettings>() ?? new();
             settings.OnboardingTaskId = onboardingTaskInput;
             metricDao.Settings = settings.Serialize();
+
             _context.SaveChanges(); //this might cause problems later on when saving a shit ton of data at once
         }
         catch (Exception e)
         {
-            _notificationService.NotifyError("Failed to save settings!");
+            _notificationService.NotifyError(name, "Failed to save Onboarding time settings!");
             throw;
         }
-
-        _notificationService.NotifySuccess("Successfully saved settings!");
     }
     protected override async Task OnInitializedAsync()
     {
-        _saveAllEvent += (o, e) => { Save(); };
+        SaveState.OnSaveEvent += (o, e) =>
+        {
+            Save();
+        };
         _jira = _jiraService.GetInstance();
         try
         {
             _context ??= _dbFactory.CreateDbContext();
-            var metric = _context.Metrics.First(x => x.MetricEnum == _metricType);
-            RadialSettings = metric.RadialSettings;
+            var metric = _context.Metrics.AsNoTracking().First(x => x.MetricEnum == _metricType);
             onboardingTaskInput = metric.Settings?.Deserialize<OnboardingTimeSettings>()?.OnboardingTaskId ?? string.Empty;
         }
         catch (Exception e)
         {
-            _notificationService.NotifyError("Failed to load settings!");
+            _notificationService.NotifyError(name, "Failed to load settings!");
             throw;
         }
         await base.OnInitializedAsync();

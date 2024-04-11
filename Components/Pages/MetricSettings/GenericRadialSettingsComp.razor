@@ -1,31 +1,214 @@
 ﻿@using MetricDashboard.Data.Models
-<RadzenStack Style="margin-bottom: 16px;">
-    <RadzenLabel Text="Green Range"></RadzenLabel>
-    <RadzenNumeric @bind-Value="@RadialSettings.GreenRange"></RadzenNumeric>
-</RadzenStack>
-
-<RadzenStack Style="margin-bottom: 16px;">
-    <RadzenLabel Text="Yellow Range"></RadzenLabel>
-    <RadzenNumeric @bind-Value="@RadialSettings.YellowRange"></RadzenNumeric>
-</RadzenStack>
-
-<RadzenStack Style="margin-bottom: 16px;">
-    <RadzenLabel Text="Red Range"></RadzenLabel>
-    <RadzenNumeric @bind-Value="@RadialSettings.RedRange"></RadzenNumeric>
-</RadzenStack>
-
-<RadzenStack Style="margin-bottom: 16px;">
-    <RadzenLabel Text="Length"></RadzenLabel>
-    <RadzenNumeric @bind-Value="@RadialSettings.Length"></RadzenNumeric>
-</RadzenStack>
-@if(RadialSettings.GetRanges().Last().range < RadialSettings.Length)
-{
-    <div class="warning-message" style="color: red;">
-        Warning: Ensure the largest range is not set lower than the total length, as metric calculations will not work and settings may not be saved.
+@using MetricDashboard.Helpers
+@using static MetricDashboard.Components.Pages.MetricSettings.MetricFieldSetSettings
+@inject IDbContextFactory<ApplicationDbContext> _dbFactory
+<RadzenFieldset Text="Radial settings" AllowCollapse=true Collapsed=true>
+    <div class="col-md-4">
+        <RadzenLabel Text="Pointer units"></RadzenLabel>
+        <br />
+        <RadzenTextBox MaxLength=20 @bind-Value="@RadialSettings.PointerUnits" />
     </div>
-}
-<RadialComponent Style="width: 100%; height:300px;" Ranges="RadialSettings.GetRanges()" Length="RadialSettings.Length" />
+    <br />
+    <div class="row">
+        <div class="col-md-4">
+            <RadzenLabel Text="Start"></RadzenLabel>
+            <br />
+            <RadzenNumeric ShowUpDown=false Max="10000" Min="-10000" @bind-Value="@RadialSettings.Start" />
+        </div>
+        <div class="col-md-4">
+            <RadzenLabel Text="End"></RadzenLabel>
+            <br />
+            <RadzenNumeric ShowUpDown=false Max="10000" Min="-10000" @bind-Value="@RadialSettings.End" />
+        </div>
+        <div class="col-md-4">
+            <RadzenLabel Text="Step"></RadzenLabel>
+            <br />
+            <RadzenNumeric ShowUpDown=false Max="10000" Min="-10000" @bind-Value="@RadialSettings.Step" />
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-4">
+            <RadzenLabel Style="color: green" Text="Green Ranges"></RadzenLabel>
+            <RadzenDataGrid @ref=greenDataGrid Data="RadialSettings.ColorRanges.Where(x=>x.Color == ColorEnum.GREEN)" TItem="ColorRange" EditMode="DataGridEditMode.Multiple">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ColorRange" Property="From" Title="From">
+                        <Template Context="colorRange">
+                            <RadzenNumeric Min="RadialSettings.Start" Max="RadialSettings.End" ShowUpDown=false @bind-Value="colorRange.From" Style="display: block" Name="greenFrom" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ColorRange" Property="To" Title="To">
+                        <Template Context="colorRange">
+                            <RadzenNumeric Min="RadialSettings.Start" Max="RadialSettings.End" ShowUpDown=false @bind-Value="colorRange.To" Style=" display: block" Name="greenTo" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ColorRange" Context="colorRange" Filterable="false"
+                                          Sortable="false" TextAlign="TextAlign.Right" Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Width="50px">
+                        <Template Context="colorRange">
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat"
+                                          Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRange(colorRange, ColorEnum.GREEN))"
+                                          @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            <RadzenButton class="my-2" ButtonStyle="ButtonStyle.Success" Icon="add_circle_outline" Text="Add New Range" Click="(e) => AddNewRange(ColorEnum.GREEN)" />
+        </div>
+        <div class="col-md-4">
+            <RadzenLabel Style="color: #c9c929;" Text="Yellow Ranges"></RadzenLabel>
+            <RadzenDataGrid @ref=yellowDataGrid Data="@RadialSettings.ColorRanges.Where(x=>x.Color == ColorEnum.YELLOW)" TItem="ColorRange" EditMode="DataGridEditMode.Multiple">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ColorRange" Property="From" Title="From">
+                        <Template Context="colorRange">
+                            <RadzenNumeric Min="RadialSettings.Start" Max="RadialSettings.End" ShowUpDown=false @bind-Value="colorRange.From" Style="display: block" Name="yellowFrom" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ColorRange" Property="To" Title="To">
+                        <Template Context="colorRange">
+                            <RadzenNumeric Min="RadialSettings.Start" Max="RadialSettings.End" ShowUpDown=false @bind-Value="colorRange.To" Style=" display: block" Name="yellowTo" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ColorRange" Context="colorRange" Filterable="false"
+                                          Sortable="false" TextAlign="TextAlign.Right" Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Width="50px">
+                        <Template Context="colorRange">
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat"
+                                          Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRange(colorRange, ColorEnum.YELLOW))"
+                                          @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            <RadzenButton class="my-2" ButtonStyle="ButtonStyle.Success" Icon="add_circle_outline" Text="Add New Range" Click="(e) => AddNewRange(ColorEnum.YELLOW)" />
+        </div>
+        <div class="col-md-4">
+            <RadzenLabel Style="color: red" Text="Red Ranges"></RadzenLabel>
+            <RadzenDataGrid @ref=redDataGrid Data="@RadialSettings.ColorRanges.Where(x=>x.Color == ColorEnum.RED)" TItem="ColorRange" EditMode="DataGridEditMode.Multiple">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ColorRange" Property="From" Title="From">
+                        <Template Context="colorRange">
+                            <RadzenNumeric Min="RadialSettings.Start" Max="RadialSettings.End" ShowUpDown=false @bind-Value="colorRange.From" Style="display: block" Name="redFrom" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ColorRange" Property="To" Title="To">
+                        <Template Context="colorRange">
+                            <RadzenNumeric Min="RadialSettings.Start" Max="RadialSettings.End" ShowUpDown=false @bind-Value="colorRange.To" Style=" display: block" Name="redTo" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ColorRange" Context="colorRange" Filterable="false"
+                                          Sortable="false" TextAlign="TextAlign.Right" Frozen="true" FrozenPosition="FrozenColumnPosition.Right" Width="50px">
+                        <Template Context="colorRange">
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat"
+                                          Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRange(colorRange, ColorEnum.RED))"
+                                          @onclick:stopPropagation="true" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            <RadzenButton class="my-2" ButtonStyle="ButtonStyle.Success" Icon="add_circle_outline" Text="Add New Range" Click="(e) => AddNewRange(ColorEnum.RED)" />
+        </div>
+    </div>
+
+    <RadialComponent Style="width: 100%; height:300px;" Settings="RadialSettings" />
+
+    @{
+        var notCoveredRanges = Helper.GetNotCoveredRanges(RadialSettings.ColorRanges, RadialSettings.Start, RadialSettings.End);
+        if (notCoveredRanges.Any())
+        {
+            <div class="warning-message" style="color: red;">
+                Warning: The following ranges are not covered and settings will not be saved: @string.Join(", ", notCoveredRanges.Select(r => $"({r.from}-{r.to})"))
+                <br />
+                Cover the ranges or reduce the length to proceed.
+            </div>
+        }
+    }
+    @{
+        var overCoveredRanges = Helper.GetOverCoveredRanges(RadialSettings.ColorRanges);
+        if (overCoveredRanges.Any())
+        {
+            <div class="warning-message" style="color: red;">
+                Warning: The following ranges are covered multiple times and settings will not be saved: @string.Join(", ", overCoveredRanges.Select(r => $"({r.from}-{r.to})"))
+                <br />
+                Reconfigure color ranges to proceed.
+            </div>
+        }
+    }
+
+</RadzenFieldset>
 @code {
-    [Parameter,EditorRequired]
-    public RadialSettings RadialSettings { get; set; } 
+
+    [Parameter, EditorRequired]
+    public MetricEnum MetricEnum { get; set; }
+
+    [CascadingParameter]
+    public SaveState SaveState { get; set; }
+    public RadialSettings RadialSettings { get; set; }
+
+    bool SettingsAreValid => !Helper.GetOverCoveredRanges(RadialSettings.ColorRanges).Any()
+        && !Helper.GetNotCoveredRanges(RadialSettings.ColorRanges, RadialSettings.Start, RadialSettings.End).Any();
+
+    ApplicationDbContext _context;
+
+    RadzenDataGrid<ColorRange> greenDataGrid { get; set; }
+    RadzenDataGrid<ColorRange> yellowDataGrid { get; set; }
+    RadzenDataGrid<ColorRange> redDataGrid { get; set; }
+
+    void Save()
+    {
+        if(SettingsAreValid)
+            _context.SaveChanges();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        SaveState.OnSaveEvent += (o, e) => { Save(); };
+        _context ??= _dbFactory.CreateDbContext();
+        RadialSettings = _context.RadialSettings
+        .Include(x=> x.ColorRanges)
+        .FirstOrDefault(x => x.MetricEnum == MetricEnum)!;
+        if(RadialSettings == null)
+        {
+            RadialSettings = new()
+            {
+                MetricEnum = MetricEnum
+            };
+            _context.RadialSettings.Add(RadialSettings);
+        }
+    }
+
+    void DeleteRange(ColorRange colorRange, ColorEnum colorEnum)
+    {
+        var dataGrid = GetGrid(colorEnum);
+        if (RadialSettings.ColorRanges.Contains(colorRange))
+        {
+            RadialSettings.ColorRanges.Remove(colorRange);
+        }
+        dataGrid.Reload();
+    }
+
+    void AddNewRange(ColorEnum colorEnum)
+    {
+        var dataGrid = GetGrid(colorEnum);
+
+        var colorRange = new ColorRange()
+        {
+            RadialSettingsId = RadialSettings.Id,
+            Color = colorEnum,
+        };
+        RadialSettings.ColorRanges.Add(colorRange);
+        dataGrid.InsertRow(colorRange);
+    }
+
+    RadzenDataGrid<ColorRange> GetGrid(ColorEnum colorEnum)
+    {
+        switch (colorEnum)
+        {
+            case ColorEnum.GREEN:
+                return greenDataGrid;
+            case ColorEnum.YELLOW:
+                return yellowDataGrid;
+            case ColorEnum.RED:
+                return redDataGrid;
+        }
+        return null;
+    }
 }
