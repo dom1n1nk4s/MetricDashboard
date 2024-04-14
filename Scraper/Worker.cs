@@ -27,23 +27,23 @@ namespace MetricDashboard.Scraper
             {
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    CalculateMetrics();
+                    await CalculateMetrics();
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
                 await Task.Delay(60 * 60 * 1000, stoppingToken); // 60 minutes
             }
 
         }
-        private void CalculateMetrics()
+        private async Task CalculateMetrics()
         {
             using (var context = _dbFactory.CreateDbContext())
             {
-                var metricDAOs = context.Metrics.AsNoTracking().AsEnumerable().OrderBy(x => x.MetricEnum).ToList();
+                var metricDAOs = (await context.Metrics.AsNoTracking().ToListAsync()).OrderBy(x => x.MetricEnum).ToList();
                 foreach (var calc in _calculators.ToList().OrderBy(x => x.MetricEnum).Zip(metricDAOs))
                 {
                     if (!calc.Second.IsDisabled)
                     {
-                        //calc.First.Calculate();
+                        await calc.First.Calculate();
                     }
                 }
                 //TODO: calculate system scores here

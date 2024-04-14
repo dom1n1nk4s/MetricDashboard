@@ -7,12 +7,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
     {
         public MetricEnum MetricEnum => MetricEnum.LEAD_TIME_FOR_CHANGES;
 
-        public void Calculate(ApplicationDbContext dbcontext, Atlassian.Jira.Jira jira)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
+        public async Task Calculate()
         {
             throw new NotImplementedException();
         }

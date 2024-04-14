@@ -9,6 +9,7 @@ namespace MetricDashboard.Data
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
         public virtual DbSet<Metric> Metrics { get; set; }
+        public virtual DbSet<MetricResult> MetricResults { get; set; }
         public virtual DbSet<RadialSettings> RadialSettings { get; set; }
         public virtual DbSet<ColorRange> ColorRanges { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
@@ -16,12 +17,13 @@ namespace MetricDashboard.Data
             base.OnModelCreating(builder);
 
             builder.Entity<Metric>()
-                .HasKey(x => x.MetricEnum);
+                .HasKey(x => x.Id);
 
             builder.Entity<Metric>()
                 .HasOne(x => x.RadialSettings)
                 .WithOne()
-                .HasForeignKey<RadialSettings>(x => x.MetricEnum);
+                .HasForeignKey<RadialSettings>(x => x.MetricId)
+                .IsRequired();
 
             builder.Entity<RadialSettings>()
                 .HasKey(x => x.Id);
@@ -41,32 +43,32 @@ namespace MetricDashboard.Data
         {
             builder.Entity<Metric>().HasData(
             [
-                new Metric { System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.DEPLOYMENT_FREQUENCY },
-                new Metric { System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.LEAD_TIME_FOR_CHANGES },
-                new Metric { System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.FAILED_DEPLOYMENT_RECOVERY_TIME },
-                new Metric { System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.CHANGE_FAILURE_RATE },
+                new Metric { Id = 1, System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.DEPLOYMENT_FREQUENCY },
+                new Metric { Id = 2, System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.LEAD_TIME_FOR_CHANGES },
+                new Metric { Id = 3, System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.FAILED_DEPLOYMENT_RECOVERY_TIME },
+                new Metric { Id = 4, System = MetricSystemEnum.DORA, MetricEnum = MetricEnum.CHANGE_FAILURE_RATE },
 
                 // Satisfaction
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.SATISFACTION_SURVEY },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.WORKER_RETENTION_RATE },
+                new Metric { Id = 5, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.SATISFACTION_SURVEY },
+                new Metric { Id = 6, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.WORKER_RETENTION_RATE },
 
                 // Performance
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.BUG_COUNT },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CLIENT_SATISFACTION_SURVEY },
+                new Metric { Id = 7, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.BUG_COUNT },
+                new Metric { Id = 8, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CLIENT_SATISFACTION_SURVEY },
 
                 // Activity
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CODE_TASK_MERGE_COMMIT_COUNT },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CODE_REVIEW_PARTICIPATION },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.TIME_SPENT_WORKING },
+                new Metric { Id = 9, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CODE_TASK_MERGE_COMMIT_COUNT },
+                new Metric { Id = 10, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CODE_REVIEW_PARTICIPATION },
+                new Metric { Id = 11, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.TIME_SPENT_WORKING },
 
                 // Communication and Collaboration
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CODE_INTEGRATION_TIME },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.ONBOARDING_TIME },
+                new Metric { Id = 12, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.CODE_INTEGRATION_TIME },
+                new Metric { Id = 13, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.ONBOARDING_TIME },
 
                 // Efficiency and Flow
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.TASK_HANDOVERS_BEFORE_COMPLETION },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.WORKFLOW_INTERRUPTION_TIME },
-                new Metric { System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.BUSINESS_VALUE_PERCENTAGE }
+                new Metric { Id = 14, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.TASK_HANDOVERS_BEFORE_COMPLETION },
+                new Metric { Id = 15, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.WORKFLOW_INTERRUPTION_TIME },
+                new Metric { Id = 16, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.BUSINESS_VALUE_PERCENTAGE }
             ]);
             //TODO: export db and run sql scripts for seeding radialsettings and color ranges. cant be bothered to do it in c#
         }

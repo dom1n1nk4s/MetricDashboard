@@ -8,12 +8,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
     {
         public MetricEnum MetricEnum => MetricEnum.CLIENT_SATISFACTION_SURVEY;
 
-        public void Calculate(ApplicationDbContext dbcontext, Atlassian.Jira.Jira jira)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
+        public async Task Calculate()
         {
             throw new NotImplementedException();
         }

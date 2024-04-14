@@ -4,6 +4,7 @@ namespace MetricDashboard.Data.Models
 {
     public class Metric
     {
+        public int Id { get; set; }
         public MetricEnum MetricEnum { get; set; }
         public bool IsDisabled { get; set; }
         public string Settings { get; set; } = string.Empty;

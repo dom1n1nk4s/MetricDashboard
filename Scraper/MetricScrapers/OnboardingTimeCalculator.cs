@@ -22,10 +22,10 @@ namespace MetricDashboard.Scraper.MetricScrapers
             _jira = jiraService.GetInstance();
             _dbFactory = dbFactory;
         }
-        public void Calculate()
+        public async Task Calculate()
         {
-            using var dbContext = _dbFactory.CreateDbContext();
-            var settings = dbContext.Metrics.AsNoTracking().First(x => x.MetricEnum == Data.Enums.MetricEnum.ONBOARDING_TIME)?.Settings?.Deserialize<OnboardingTimeSettings>();
+            using var _context = _dbFactory.CreateDbContext();
+            var settings = (await _context.Metrics.AsNoTracking().FirstAsync(x => x.MetricEnum == MetricEnum))?.Settings?.Deserialize<OnboardingTimeSettings>();
             if(settings == null)
             {
                 _logger.LogError($"Failed to get settings for {nameof(OnboardingTimeCalculator)}");
@@ -37,17 +37,23 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}. Issue is invalid.");
                 return;
             }
-            var issue = _jira.Issues.GetIssueAsync(taskId).GetAwaiter().GetResult();
+            var issue = await _jira.Issues.GetIssueAsync(taskId);
             if(issue == null)
             {
                 _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}");
                 return;
             }
-            var eachPersonsTimeSpent = issue.GetWorklogsAsync().Result.GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum()));
+            var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum()));
             var average = eachPersonsTimeSpent.Select(x => x.Item2).Average();
 
-            //save metricCalculation values as eachPersonsTimeSpent 
-            //save score 
+
+            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            {
+                MetricEnum = MetricEnum,
+                Score = average,
+                ObjectsAffectingScore = eachPersonsTimeSpent.Serialize()
+            });
+            await _context.SaveChangesAsync();
         }
 
     }

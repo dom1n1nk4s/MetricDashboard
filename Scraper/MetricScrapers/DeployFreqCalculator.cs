@@ -6,7 +6,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
     internal class DeployFreqCalculator : IMetricCalculator
     {
         public MetricEnum MetricEnum => MetricEnum.DEPLOYMENT_FREQUENCY;
-        public void Calculate()
+        public async Task Calculate()
         {
             throw new NotImplementedException();
         }

@@ -1,4 +1,5 @@
-﻿@using MetricDashboard.Data.Models
+﻿@using Atlassian.Jira
+@using MetricDashboard.Data.Models
 @using MetricDashboard.Services
 @using Microsoft.Extensions.Localization
 @using static MetricDashboard.Components.Pages.MetricSettings.MetricFieldSetSettings
@@ -31,7 +32,7 @@
     string onboardingTaskInput { get; set; }
     ApplicationDbContext _context;
 
-    Atlassian.Jira.Jira _jira;
+    Jira _jira;
     IEnumerable<string> issues;
 
     async Task OnLoadData(LoadDataArgs args)
@@ -42,11 +43,22 @@
         }
     }
 
-    void Save()
+    async Task Save()
     {
         try
         {
-            if (_jira.Issues.Queryable.FirstOrDefault(x => x.Key == onboardingTaskInput) == null)
+            if (string.IsNullOrWhiteSpace(onboardingTaskInput))
+            {
+                _notificationService.NotifyError(name, "Invalid Onboarding task id entered.");
+                return;
+            }
+
+            Issue taskInJira = null!;
+            try
+            {
+                taskInJira = await _jira.Issues.GetIssueAsync(onboardingTaskInput);
+            }
+            catch (Exception e)
             {
                 _notificationService.NotifyError(name, "Invalid Onboarding task id entered.");
                 return;

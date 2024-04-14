@@ -167,11 +167,14 @@
         .FirstOrDefault(x => x.MetricEnum == MetricEnum)!;
         if(RadialSettings == null)
         {
+            var metric = _context.Metrics.First(x => x.MetricEnum == MetricEnum);
             RadialSettings = new()
             {
-                MetricEnum = MetricEnum
+                MetricEnum = MetricEnum,
+                MetricId = metric.Id
             };
             _context.RadialSettings.Add(RadialSettings);
+            metric.RadialSettings = RadialSettings;
         }
     }
 
