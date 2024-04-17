@@ -26,45 +26,51 @@ namespace MetricDashboard.Scraper.MetricScrapers
             try
             {
 
-            using var _context = _dbFactory.CreateDbContext();
-                 var users = (await  _jira.RestClient.ExecuteRequestAsync<List<JiraUser>>(RestSharp.Method.Get, "/rest/api/3/users/search")).Where(x=>x.Email != null);
-                // for active users -> find first issue where they are a watcher, get its datetime and subtract from datetime.now
-                // for inactive users -> find first issue where they are a watcher, get its datetime and subtract from the last issue they were a watcher.
-                //this might be really laggy and take a lot of resources, but its just a PoC
-            var settings = (await _context.Metrics.AsNoTracking().FirstAsync(x => x.MetricEnum == MetricEnum))?.Settings?.Deserialize<OnboardingTimeSettings>();
-            if (settings == null)
-            {
-                _logger.LogError($"Failed to get settings for {nameof(WorkerRetRateCalculator)}");
-                return;
-            }
-            var taskId = settings.OnboardingTaskId;
-            if (string.IsNullOrWhiteSpace(taskId))
-            {
-                _logger.LogError($"Failed to get issue for {nameof(WorkerRetRateCalculator)}. Issue is invalid.");
-                return;
-            }
-            var issue = await _jira.Issues.GetIssueAsync(taskId);
-            if (issue == null)
-            {
-                _logger.LogError($"Failed to get issue for {nameof(WorkerRetRateCalculator)}");
-                return;
-            }
-            var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum()));
-            var average = eachPersonsTimeSpent.Select(x => x.Item2).Average();
+                using var _context = _dbFactory.CreateDbContext();
+                var users = (await _jira.RestClient.ExecuteRequestAsync<List<JiraUser>>(RestSharp.Method.Get, "/rest/api/3/users/search")).Where(x => x.Locale != null).ToList();
+                var objectsAffectingScore = new List<(string Name, DateTime ActiveFrom, DateTime ActiveTo)>();
+                foreach (var user in users)
+                {
+                    var issues = (await _jira.Issues.GetIssuesFromJqlAsync($"reporter = \"{user.AccountId}\" OR assignee = \"{user.AccountId}\"", maxIssues: 10000))
+                        .Select(x => x.Created).ToList();
+                    var firstIssue = issues.Min();
+                    var lastIssue = issues.Max();
+                    objectsAffectingScore.Add(new(user.DisplayName, firstIssue.Value, lastIssue.Value));
+                }
 
+                var score = objectsAffectingScore.Select(x => CalculateMonthDifference(x.ActiveFrom, x.ActiveTo)).Average();
 
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
-            {
-                MetricEnum = MetricEnum,
-                Score = average,
-                ObjectsAffectingScore = eachPersonsTimeSpent.Serialize()
-            });
-            await _context.SaveChangesAsync();
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = score,
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
             }
+        }
+        private double CalculateMonthDifference(DateTime startDate, DateTime endDate)
+        {
+            int monthsApart = (endDate.Year - startDate.Year) * 12 + endDate.Month - startDate.Month;
+            double daysInMonth = 0;
+
+            if (startDate.Day > endDate.Day)
+            {
+                daysInMonth = DateTime.DaysInMonth(startDate.Year, startDate.Month);
+            }
+            else
+            {
+                daysInMonth = DateTime.DaysInMonth(endDate.Year, endDate.Month);
+            }
+
+            double daysDifference = (endDate - startDate).TotalDays;
+            double monthsDifference = monthsApart + (daysDifference / daysInMonth);
+
+            return monthsDifference;
         }
     }
 }

@@ -12,6 +12,7 @@ namespace MetricDashboard.Data
         public virtual DbSet<MetricResult> MetricResults { get; set; }
         public virtual DbSet<RadialSettings> RadialSettings { get; set; }
         public virtual DbSet<ColorRange> ColorRanges { get; set; }
+        public virtual DbSet<GlobalMetricSettings> GlobalMetricSettings { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -69,6 +70,11 @@ namespace MetricDashboard.Data
                 new Metric { Id = 14, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.TASK_HANDOVERS_BEFORE_COMPLETION },
                 new Metric { Id = 15, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.WORKFLOW_INTERRUPTION_TIME },
                 new Metric { Id = 16, System = MetricSystemEnum.SPACE, MetricEnum = MetricEnum.BUSINESS_VALUE_PERCENTAGE }
+            ]);
+
+            builder.Entity<GlobalMetricSettings>().HasData(
+            [
+                new GlobalMetricSettings { Id = 1, Scope = TimeScopeEnum.SIX_MONTHS, SprintLength = 14 }
             ]);
             //TODO: export db and run sql scripts for seeding radialsettings and color ranges. cant be bothered to do it in c#
         }

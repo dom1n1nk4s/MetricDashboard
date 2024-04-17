@@ -2,7 +2,6 @@
 @using MetricDashboard.Data.Models
 @using MetricDashboard.Services
 @using Microsoft.Extensions.Localization
-@using static MetricDashboard.Components.Pages.MetricSettings.MetricFieldSetSettings
 @implements IDisposable
 @inject NavigationManager _navigation
 @inject NotificationService _notificationService
@@ -10,7 +9,7 @@
 @inject JiraService _jiraService
 @inject IStringLocalizer<Locales.Resources> L
 
-<RadzenFieldset Text="Onboarding time" AllowCollapse=true>
+<RadzenFieldset Text="@name" AllowCollapse=true>
     <RadzenStack>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
@@ -34,6 +33,7 @@
 
     Jira _jira;
     IEnumerable<string> issues;
+    string initialTaskValue = string.Empty;
 
     async Task OnLoadData(LoadDataArgs args)
     {
@@ -47,6 +47,10 @@
     {
         try
         {
+            if(initialTaskValue == onboardingTaskInput)
+            {
+                return;
+            }
             if (string.IsNullOrWhiteSpace(onboardingTaskInput))
             {
                 _notificationService.NotifyError(name, "Invalid Onboarding task id entered.");
@@ -91,6 +95,7 @@
             _context ??= _dbFactory.CreateDbContext();
             var metric = _context.Metrics.AsNoTracking().First(x => x.MetricEnum == _metricType);
             onboardingTaskInput = metric.Settings?.Deserialize<OnboardingTimeSettings>()?.OnboardingTaskId ?? string.Empty;
+            initialTaskValue = onboardingTaskInput;
         }
         catch (Exception e)
         {

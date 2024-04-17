@@ -1,16 +1,14 @@
 ﻿@inject NotificationService _notificationService
 <RadzenStack>
     <CascadingValue Value="saveState">
+        <GlobalMetricSettingsComp/>
         <OnboardingTimeSettingsComp />
+        <GenericXMetricSettingsComp MetricEnum="MetricEnum.WORKER_RETENTION_RATE" />
     </CascadingValue>
 </RadzenStack>
 <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="SaveAll" />
 @code {
-    public class SaveState
-    {
-        public EventHandler OnSaveEvent;
 
-    }
     SaveState saveState = new();
     void SaveAll()
     {

@@ -1,0 +1,69 @@
+﻿@using MetricDashboard.Data.Models
+@implements IDisposable
+@inject NotificationService _notificationService
+@inject IDbContextFactory<ApplicationDbContext> _dbFactory
+
+<RadzenFieldset Text="Global settings" AllowCollapse=true>
+    <RadzenStack>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Scope" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenDropDown Data="@(Enum.GetValues(typeof(TimeScopeEnum)).Cast<Enum>().Except([TimeScopeEnum.NONE]))" @bind-Value=@globalSettings.Scope Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Sprint length" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenNumeric Min="1" @bind-Value=@globalSettings.SprintLength Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+</RadzenFieldset>
+@code {
+    [CascadingParameter]
+    public SaveState SaveState { get; set; }
+    ApplicationDbContext _context;
+    GlobalMetricSettings globalSettings;
+    string name => "Global settings";
+    async Task Save()
+    {
+        try
+        {
+            _context ??= _dbFactory.CreateDbContext();
+            
+            _context.SaveChanges(); //this might cause problems later on when saving a shit ton of data at once
+        }
+        catch (Exception e)
+        {
+            _notificationService.NotifyError(name, "Failed to save Onboarding time settings!");
+            throw;
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        SaveState.OnSaveEvent += (o, e) =>
+        {
+            Save();
+        };
+        try
+        {
+            _context ??= _dbFactory.CreateDbContext();
+            globalSettings = _context.GlobalMetricSettings.First(x => x.Id == 1);
+        }
+        catch (Exception e)
+        {
+            _notificationService.NotifyError(name, "Failed to load settings!");
+            throw;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    void IDisposable.Dispose()
+    {
+        _context?.Dispose();
+    }
+}

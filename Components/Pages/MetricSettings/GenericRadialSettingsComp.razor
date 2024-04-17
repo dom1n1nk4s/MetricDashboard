@@ -1,7 +1,10 @@
 ﻿@using MetricDashboard.Data.Models
 @using MetricDashboard.Helpers
+@using Microsoft.Extensions.Localization
 @using static MetricDashboard.Components.Pages.MetricSettings.MetricFieldSetSettings
 @inject IDbContextFactory<ApplicationDbContext> _dbFactory
+@inject IStringLocalizer<Locales.Resources> L
+@inject NotificationService _notificationService
 <RadzenFieldset Text="Radial settings" AllowCollapse=true Collapsed=true>
     <div class="col-md-4">
         <RadzenLabel Text="Pointer units"></RadzenLabel>
@@ -135,7 +138,7 @@
 
 </RadzenFieldset>
 @code {
-
+    string name => @L[MetricEnum.ToString() + ".Name"];
     [Parameter, EditorRequired]
     public MetricEnum MetricEnum { get; set; }
 
@@ -154,8 +157,17 @@
 
     void Save()
     {
-        if(SettingsAreValid)
-            _context.SaveChanges();
+        try
+        {
+            if(SettingsAreValid)
+                _context.SaveChanges();
+
+        }
+        catch(Exception e)
+        {
+            _notificationService.NotifyError(name, "Failed to save radial settings!");
+            throw;
+        }
     }
 
     protected override async Task OnInitializedAsync()

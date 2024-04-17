@@ -4,6 +4,7 @@ using MetricDashboard.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MetricDashboard.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240417080506_AddedGlobalSettings")]
+    partial class AddedGlobalSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,9 +128,6 @@ namespace MetricDashboard.Migrations
                     b.Property<int>("Scope")
                         .HasColumnType("int");
 
-                    b.Property<int>("SprintLength")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("GlobalMetricSettings");
@@ -136,8 +136,7 @@ namespace MetricDashboard.Migrations
                         new
                         {
                             Id = 1,
-                            Scope = 1,
-                            SprintLength = 14
+                            Scope = 1
                         });
                 });
 

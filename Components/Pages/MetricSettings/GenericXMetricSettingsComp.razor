@@ -1,0 +1,18 @@
+﻿@using Microsoft.Extensions.Localization
+@inject NavigationManager _navigation
+@inject NotificationService _notificationService
+@inject IStringLocalizer<Locales.Resources> L
+
+<RadzenFieldset Text="@L[name]" AllowCollapse=true>
+    <RadzenStack>
+        <GenericRadialSettingsComp MetricEnum="MetricEnum" />
+    </RadzenStack>
+ </RadzenFieldset>
+
+@code {
+    string name => @L[MetricEnum.ToString() + ".Name"];
+
+    [Parameter,EditorRequired]
+    public MetricEnum MetricEnum {get;set;} 
+
+}

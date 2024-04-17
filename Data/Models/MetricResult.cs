@@ -8,5 +8,6 @@ namespace MetricDashboard.Data.Models
         public MetricEnum MetricEnum { get; set; }
         public double Score { get; set; }
         public string ObjectsAffectingScore { get; set; }
+        public DateTime Date { get; set; } = DateTime.Now;
     }
 }
