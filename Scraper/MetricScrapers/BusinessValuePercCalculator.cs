@@ -1,5 +1,9 @@
-﻿using MetricDashboard.Data;
+﻿using Atlassian.Jira;
+using MetricDashboard.Data;
 using MetricDashboard.Data.Enums;
+using MetricDashboard.Extensions;
+using MetricDashboard.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
@@ -13,10 +17,36 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint)
          */
         public MetricEnum MetricEnum => MetricEnum.BUSINESS_VALUE_PERCENTAGE;
-
+        private readonly Jira _jira;
+        private readonly ILogger<Worker> _logger;
+        private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
+        public BusinessValuePercCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        {
+            _logger = logger;
+            _jira = jiraService.GetInstance();
+            _dbFactory = dbFactory;
+        }
         public async Task Calculate()
         {
-            throw new NotImplementedException();
+            using var _context = _dbFactory.CreateDbContext();
+            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+            var issues = _jira.GetCachedIssues(globalSettings);
+            var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking)>();
+            var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze", "code review", "PR", "pull request", "merge request" };
+            foreach (var issue in issues)
+            {
+                var hoursSpentWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
+                    .Where(x => !notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y)))
+                    .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0 )).Sum(); // to hours
+                objectsAffectingScore.Add((issue.Key.Value, hoursSpentWorking));
+            }
+            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            {
+                MetricEnum = MetricEnum,
+                Score = objectsAffectingScore.Average(x => x.countOfHoursWorking),
+                ObjectsAffectingScore = objectsAffectingScore.Serialize()
+            });
+            await _context.SaveChangesAsync();
         }
     }
 }

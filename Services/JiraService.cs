@@ -13,6 +13,6 @@ namespace MetricDashboard.Services
             _jiraInstance = Jira.CreateRestClient(settings.JiraUrl, settings.JiraUsername, settings.JiraPassword);
 
         }
-        public Jira GetInstance () { return _jiraInstance; }
+        public Jira GetInstance() { return null; }//_jiraInstance; }
     }
 }

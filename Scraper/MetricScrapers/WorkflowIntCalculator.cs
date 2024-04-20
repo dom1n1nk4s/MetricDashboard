@@ -37,7 +37,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var objectsAffectingScore = new List<(string issueKey, double durationOnHoldInHours)>();
-                var issues = _jira.Issues.Queryable.Where(x => x.Created > globalSettings.Scope.GetDateTime(globalSettings.SprintLength)).ToList();
+                var issues = _jira.GetCachedIssues(globalSettings);
                 foreach (var issue in issues)
                 {
                     var changeLogs = await issue.GetChangeLogsAsync(); //might need to order by .CreatedDate, check on debugger

@@ -5,10 +5,10 @@
 <RadzenRadialGauge Style="@Style">
     <RadzenRadialGaugeScale StartAngle="-150" EndAngle="150" Step="@Settings.Step" Min="@Settings.Start"
                             Max="@Settings.End" TickPosition=GaugeTickPosition.Inside>
-        <RadzenRadialGaugeScalePointer Value="@Settings.Value" Length="0.6" ShowValue="true">
+        <RadzenRadialGaugeScalePointer Value="@PointerValue" Length="0.6" ShowValue="true">
             <Template Context="pointer">
                 <h4>
-                    @Settings.Value <sub>@Settings.PointerUnits</sub>
+                    @PointerValue.ToString("N1") <sub>@Settings.PointerUnits</sub>
                 </h4>
             </Template>
         </RadzenRadialGaugeScalePointer>
@@ -27,6 +27,8 @@
     public RadialSettings Settings { get; set; }
     [Parameter]
     public string Style { get; set; }
+    [Parameter]
+    public double PointerValue { get; set; }
     protected override void OnParametersSet()
     {
         base.OnParametersSet();

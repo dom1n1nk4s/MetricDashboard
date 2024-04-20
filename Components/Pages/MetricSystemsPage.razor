@@ -8,6 +8,7 @@
                 <RadzenText Text="@system.Score.ToString("N1")" />
                 <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
                 <RadzenText Text="@system.Name" />
+                <RadzenText Text="@GetMetricCountText(system.EnabledMetricCount)"/>
             </NavLink>
         </RadzenCard>
     </Template>
@@ -15,7 +16,7 @@
 
 @code {
     string GetLink(string m) => $"metric-systems/{m}";
-
+    string GetMetricCountText(int c) => $"Enabled metrics: {c}";
     class SystemMiniInfo
     {
         public string Name { get; set; }

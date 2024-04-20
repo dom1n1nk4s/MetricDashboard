@@ -25,9 +25,8 @@ namespace MetricDashboard.Scraper.MetricScrapers
         {
             try
             {
-
                 using var _context = _dbFactory.CreateDbContext();
-                var users = (await _jira.RestClient.ExecuteRequestAsync<List<JiraUser>>(RestSharp.Method.Get, "/rest/api/3/users/search")).Where(x => x.Locale != null).ToList();
+                var users = (await _jira.RestClient.ExecuteRequestAsync<List<JiraUser>>(RestSharp.Method.GET, "/rest/api/3/users/search")).Where(x => x.Locale != null).ToList();
                 var objectsAffectingScore = new List<(string Name, DateTime ActiveFrom, DateTime ActiveTo)>();
                 foreach (var user in users)
                 {

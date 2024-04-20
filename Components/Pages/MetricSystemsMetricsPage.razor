@@ -11,7 +11,7 @@
     <Template Context="metric">
         <RadzenCard Style="width:300px;" class="@(metric.IsDisabled ? "opacity-50" : "")">
             <NavLink class="nav-link" href="@GetMetricLink(metric.MetricEnum)">
-                <RadialComponent Style="width: 100%; height:300px;" Settings="@metric.RadialSettings" />
+                <RadialComponent Style="width: 100%; height:300px;" Settings="@metric.RadialSettings" PointerValue="@metric.PointerValue" />
                 <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
                 <RadzenText Text="@metric.Name" />
             </NavLink>
@@ -31,6 +31,7 @@
         public string Name { get; set; }
         public MetricEnum MetricEnum { get; set; }
         public RadialSettings RadialSettings{ get; set; }
+        public double PointerValue {get;set;}
         public bool IsDisabled { get; set; }
     }
     MetricMiniInfo[] metrics;
@@ -48,12 +49,17 @@
             if (_context is not null && _context.Metrics is not null)
             {
                 metrics = _context.Metrics.Include(x=>x.RadialSettings).ThenInclude(x=>x.ColorRanges).AsNoTracking().Where(x => x.System == _systemType).Select(x => new MetricMiniInfo
-                    {
+                {
                         Name = @L[x.MetricEnum.ToString() + ".Name"],
                         RadialSettings = x.RadialSettings,
                         IsDisabled = x.IsDisabled,
                         MetricEnum = x.MetricEnum,
-                    }).AsEnumerable().OrderBy(x => x.Name).ToArray();
+                }).AsEnumerable().OrderBy(x => x.Name).ToArray();
+                foreach(var metric in metrics)
+                {
+                    metric.PointerValue = _context.MetricResults.AsNoTracking().Where(x => x.MetricEnum == metric.MetricEnum)
+                    .AsEnumerable().MaxBy(x => x.Date)?.Score ?? default;
+                }
             }
         }
         catch (Exception e)

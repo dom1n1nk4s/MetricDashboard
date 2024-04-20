@@ -1,0 +1,68 @@
+﻿@using Atlassian.Jira
+@using MetricDashboard.Data.Models
+@using MetricDashboard.Services
+@using Microsoft.Extensions.Localization
+@implements IDisposable
+@inject NavigationManager _navigation
+@inject NotificationService _notificationService
+@inject IDbContextFactory<ApplicationDbContext> _dbFactory
+@inject JiraService _jiraService
+@inject IStringLocalizer<Locales.Resources> L
+
+<RadzenFieldset Text="@name" AllowCollapse=true Collapsed=true>
+    <RadzenStack>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="New score:"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenNumeric Min="0" @bind-Value=score Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
+        <GenericRadialSettingsComp MetricEnum="_metricType" />
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+    [CascadingParameter]
+    public SaveState SaveState { get; set; }
+    string name => @L[_metricType.ToString() + ".Name"];
+    MetricEnum _metricType => MetricEnum.SATISFACTION_SURVEY;
+    ApplicationDbContext _context;
+    double score;
+    async Task Save()
+    {
+        try
+        {
+
+            _context ??= _dbFactory.CreateDbContext();
+
+            await _context.MetricResults.AddAsync(new MetricResult
+                {
+                    MetricEnum = _metricType,
+                    ObjectsAffectingScore = "Manually entered.",
+                    Score = score
+                });
+            _context.SaveChanges(); //this might cause problems later on when saving a shit ton of data at once
+        }
+        catch (Exception e)
+        {
+            _notificationService.NotifyError(name, "Failed to save satisfaction survey settings!");
+            throw;
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        SaveState.OnSaveEvent += (o, e) =>
+        {
+            Save();
+        };
+
+        await base.OnInitializedAsync();
+    }
+
+    void IDisposable.Dispose()
+    {
+        _context?.Dispose();
+    }
+}
