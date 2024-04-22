@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SharpBucket.V2;
 using SharpBucket.V2.EndPoints;
 using SharpBucket.V2.Pocos;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
@@ -21,30 +22,49 @@ namespace MetricDashboard.Scraper.MetricScrapers
         private readonly SharpBucketV2 _bitbucket;
         private readonly ILogger<Worker> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public CodeTaskMergeCountCalculator(ILogger<Worker> logger, BitBucketService bitBucketService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        private readonly Jira _jira;
+        public CodeTaskMergeCountCalculator(ILogger<Worker> logger, BitBucketService bitBucketService, IDbContextFactory<ApplicationDbContext> dbFactory, JiraService jiraService)
         {
             _logger = logger;
             _bitbucket = bitBucketService.GetInstance();
             _dbFactory = dbFactory;
+            _jira = jiraService.GetInstance();
         }
         public async Task Calculate()
         {
             (var user, var repos) = _bitbucket.GetCache();
-            var objectsAffectingScore = new List<(string repoName, int taskCount, int mergeCount, int commitCount)>();
-            //dont forget to apply scope...
-            foreach(var repo in repos)
+            var objectsAffectingScore = new List<(string repoName, int taskCount, int pullRequestCount, int commitCount)>();
+            using var _context = _dbFactory.CreateDbContext();
+            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+            var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
+
+            var projectKeys = (await _jira.Projects.GetProjectsAsync()).Select(x => x.Key);
+            foreach (var repo in repos)
             {
                 var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
-                var taskCount = repoResource.PullRequestsResource()
+
+                var pullRequests = repoResource.PullRequestsResource()
                     .ListPullRequests(new ListPullRequestsParameters
-                    { States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList() });// IMPOSSIBLE THROUGH BITBUCKET API, need to either 1.parse title 2.get through jira api
-                var mergeCount = repoResource.PullRequestsResource()
-                    .ListPullRequests( new ListPullRequestsParameters
-                    { States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList()}).Count; 
-                var commitCount = repoResource.ListCommits().Count;
-                objectsAffectingScore.Add((repo.name,taskCount.Count,mergeCount,commitCount));
+                    {
+                        States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList(),
+                        Filter = $"created_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}"
+                    });
+
+                var taskCount = pullRequests.Select(x => x.source.branch.name).Where(x => projectKeys.Any(y => x.Contains(y))).Distinct().Count();
+
+                var commits = repoResource.ListCommits();
+                objectsAffectingScore.Add((repo.name, taskCount, pullRequests.Count, commits.Count));
             }
 
+            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            {
+                MetricEnum = MetricEnum,
+                Score = objectsAffectingScore.Select(x => x.taskCount + x.pullRequestCount + x.commitCount).Sum(),
+                ObjectsAffectingScore = objectsAffectingScore.Serialize()
+            });
+            await _context.SaveChangesAsync();
+
         }
+        
     }
 }
