@@ -28,23 +28,31 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            using var _context = _dbFactory.CreateDbContext();
-            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-            var issues = _jira.GetCachedIssues(globalSettings);
-            var objectsAffectingScore = new List<(string issueKey, double countOfHoursPerTask)>();
-            foreach (var issue in issues)
+            try
             {
-                var hoursPerTask = (await issue.GetSubTasksAsync()).AsEnumerable()
-                    .Select(x => (x.TimeTrackingData?.TimeSpentInSeconds ?? default) / (60.0 * 60.0)).Sum(); // to hours
-                objectsAffectingScore.Add((issue.Key.Value, hoursPerTask));
+
+                using var _context = _dbFactory.CreateDbContext();
+                var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+                var issues = _jira.GetCachedIssues(globalSettings);
+                var objectsAffectingScore = new List<(string issueKey, double countOfHoursPerTask)>();
+                foreach (var issue in issues)
+                {
+                    var hoursPerTask = (await issue.GetSubTasksAsync()).AsEnumerable()
+                        .Select(x => (x.TimeTrackingData?.TimeSpentInSeconds ?? default) / (60.0 * 60.0)).Sum(); // to hours
+                    objectsAffectingScore.Add((issue.Key.Value, hoursPerTask));
+                }
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = objectsAffectingScore.Average(x => x.countOfHoursPerTask),
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
             }
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            catch (Exception ex)
             {
-                MetricEnum = MetricEnum,
-                Score = objectsAffectingScore.Average(x => x.countOfHoursPerTask),
-                ObjectsAffectingScore = objectsAffectingScore.Serialize()
-            });
-            await _context.SaveChangesAsync();
+                _logger.LogError(ex.ToString());
+            }
         }
     }
 }

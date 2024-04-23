@@ -28,25 +28,31 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            using var _context = _dbFactory.CreateDbContext();
-            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-            var issues = _jira.GetCachedIssues(globalSettings);
-            var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking)>();
-            var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze", "code review", "PR", "pull request", "merge request" };
-            foreach (var issue in issues)
-            {
-                var hoursSpentWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
-                    .Where(x => !notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y)))
-                    .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0 )).Sum(); // to hours
-                objectsAffectingScore.Add((issue.Key.Value, hoursSpentWorking));
+            try {
+                using var _context = _dbFactory.CreateDbContext();
+                var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+                var issues = _jira.GetCachedIssues(globalSettings);
+                var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking)>();
+                var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze", "code review", "PR", "pull request", "merge request" };
+                foreach (var issue in issues)
+                {
+                    var hoursSpentWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
+                        .Where(x => !notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y)))
+                        .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0)).Sum(); // to hours
+                    objectsAffectingScore.Add((issue.Key.Value, hoursSpentWorking));
+                }
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = objectsAffectingScore.Average(x => x.countOfHoursWorking),
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
             }
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            catch (Exception ex)
             {
-                MetricEnum = MetricEnum,
-                Score = objectsAffectingScore.Average(x => x.countOfHoursWorking),
-                ObjectsAffectingScore = objectsAffectingScore.Serialize()
-            });
-            await _context.SaveChangesAsync();
+                _logger.LogError(ex.ToString());
+            }
         }
     }
 }

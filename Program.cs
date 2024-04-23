@@ -30,6 +30,7 @@ namespace MetricDashboard
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
             builder.Services.AddSingleton<JiraService>();
             builder.Services.AddSingleton<BitBucketService>();
+            builder.Services.AddSingleton<CalculatorService>();
 
             builder.Services.AddSingleton<IMetricCalculator, DeployFreqCalculator>();
             builder.Services.AddSingleton<IMetricCalculator, LeadTimeCalculator>();

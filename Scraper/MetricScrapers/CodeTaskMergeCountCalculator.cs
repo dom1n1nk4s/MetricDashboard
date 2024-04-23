@@ -32,38 +32,44 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            (var user, var repos) = _bitbucket.GetCache();
-            var objectsAffectingScore = new List<(string repoName, int taskCount, int pullRequestCount, int commitCount)>();
-            using var _context = _dbFactory.CreateDbContext();
-            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-            var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
-
-            var projectKeys = (await _jira.Projects.GetProjectsAsync()).Select(x => x.Key);
-            foreach (var repo in repos)
+            try
             {
-                var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
+                (var user, var repos) = _bitbucket.GetCache();
+                var objectsAffectingScore = new List<(string repoName, int taskCount, int pullRequestCount, int commitCount)>();
+                using var _context = _dbFactory.CreateDbContext();
+                var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+                var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
 
-                var pullRequests = repoResource.PullRequestsResource()
-                    .ListPullRequests(new ListPullRequestsParameters
-                    {
-                        States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList(),
-                        Filter = $"created_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}"
-                    });
+                var projectKeys = (await _jira.Projects.GetProjectsAsync()).Select(x => x.Key);
+                foreach (var repo in repos)
+                {
+                    var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
 
-                var taskCount = pullRequests.Select(x => x.source.branch.name).Where(x => projectKeys.Any(y => x.Contains(y))).Distinct().Count();
+                    var pullRequests = repoResource.PullRequestsResource()
+                        .ListPullRequests(new ListPullRequestsParameters
+                        {
+                            States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList(),
+                            Filter = $"created_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}"
+                        });
 
-                var commits = repoResource.ListCommits();
-                objectsAffectingScore.Add((repo.name, taskCount, pullRequests.Count, commits.Count));
+                    var taskCount = pullRequests.Select(x => x.source.branch.name).Where(x => projectKeys.Any(y => x.Contains(y))).Distinct().Count();
+
+                    var commits = repoResource.ListCommits();
+                    objectsAffectingScore.Add((repo.name, taskCount, pullRequests.Count, commits.Count));
+                }
+
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = objectsAffectingScore.Select(x => x.taskCount + x.pullRequestCount + x.commitCount).Sum(),
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
             }
-
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            catch (Exception ex)
             {
-                MetricEnum = MetricEnum,
-                Score = objectsAffectingScore.Select(x => x.taskCount + x.pullRequestCount + x.commitCount).Sum(),
-                ObjectsAffectingScore = objectsAffectingScore.Serialize()
-            });
-            await _context.SaveChangesAsync();
-
+                _logger.LogError(ex.ToString());
+            }
         }
         
     }

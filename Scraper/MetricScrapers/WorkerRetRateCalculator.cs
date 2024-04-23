@@ -32,6 +32,10 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 {
                     var issues = (await _jira.Issues.GetIssuesFromJqlAsync($"reporter = \"{user.AccountId}\" OR assignee = \"{user.AccountId}\"", maxIssues: 10000))
                         .Select(x => x.Created).ToList();
+                    if(!issues.Any())
+                    {
+                        continue;
+                    }
                     var firstIssue = issues.Min();
                     var lastIssue = issues.Max();
                     objectsAffectingScore.Add(new(user.DisplayName, firstIssue.Value, lastIssue.Value));

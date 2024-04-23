@@ -24,36 +24,44 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            using var _context = _dbFactory.CreateDbContext();
-            var settings = (await _context.Metrics.AsNoTracking().FirstAsync(x => x.MetricEnum == MetricEnum))?.Settings?.Deserialize<OnboardingTimeSettings>();
-            if(settings == null)
+            try
             {
-                _logger.LogError($"Failed to get settings for {nameof(OnboardingTimeCalculator)}");
-                return;
-            }
-            var taskId = settings.OnboardingTaskId;
-            if (string.IsNullOrWhiteSpace(taskId))
-            {
-                _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}. Issue is invalid.");
-                return;
-            }
-            var issue = await _jira.Issues.GetIssueAsync(taskId);
-            if(issue == null)
-            {
-                _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}");
-                return;
-            }
-            var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum()));
-            var average = eachPersonsTimeSpent.Select(x => x.Item2).Average();
+
+                using var _context = _dbFactory.CreateDbContext();
+                var settings = (await _context.Metrics.AsNoTracking().FirstAsync(x => x.MetricEnum == MetricEnum))?.Settings?.Deserialize<OnboardingTimeSettings>();
+                if (settings == null)
+                {
+                    _logger.LogError($"Failed to get settings for {nameof(OnboardingTimeCalculator)}");
+                    return;
+                }
+                var taskId = settings.OnboardingTaskId;
+                if (string.IsNullOrWhiteSpace(taskId))
+                {
+                    _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}. Issue is invalid.");
+                    return;
+                }
+                var issue = await _jira.Issues.GetIssueAsync(taskId);
+                if (issue == null)
+                {
+                    _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}");
+                    return;
+                }
+                var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum() / (60*60*24))); //to days
+                var average = eachPersonsTimeSpent.Select(x => x.Item2).Average();
 
 
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = average,
+                    ObjectsAffectingScore = eachPersonsTimeSpent.Serialize()
+                });
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
             {
-                MetricEnum = MetricEnum,
-                Score = average,
-                ObjectsAffectingScore = eachPersonsTimeSpent.Serialize()
-            });
-            await _context.SaveChangesAsync();
+                _logger.LogError(ex.ToString());
+            }
         }
 
     }

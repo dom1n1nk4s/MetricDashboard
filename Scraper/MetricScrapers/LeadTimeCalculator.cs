@@ -35,60 +35,66 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            using var _context = _dbFactory.CreateDbContext();
-            (var user, var repos) = _bitbucket.GetCache();
-            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-            var issues = _jira.GetCachedIssues(globalSettings);
-            var workspace = _bitbucket.WorkspacesEndPoint().ListWorkspaces().First(); //TODO: MOVE TO OPTIONS AS PRIMARY WORKSPACE (low priority)
-            var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
-            var prodCommitsForRepositories = new Dictionary<string, List<DateTime?>>();
-            var objectsAffectingScore = new List<(string issueKey, double days)>();
-            foreach (var repo in repos)
+            try
             {
-                var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
-                var environments = await repoResource.EnvironmentsResource.ListEnvironmentsAsync();
-                var prodEnvironmentUUID = environments.First(x => x.name.ToLower().Contains("prod")).uuid;
-                var deployments = await _bitbucket.GetAsync<DeploymentResponse>
-                    ($"/repositories/{workspace.slug}/{repo.slug}/deployments?q=self.state.completed_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}",
-                    new CancellationToken());
+                using var _context = _dbFactory.CreateDbContext();
+                (var user, var repos) = _bitbucket.GetCache();
+                var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+                var issues = _jira.GetCachedIssues(globalSettings);
+                var workspace = _bitbucket.WorkspacesEndPoint().ListWorkspaces().First(); //TODO: MOVE TO OPTIONS AS PRIMARY WORKSPACE (low priority)
+                var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
+                var prodCommitsForRepositories = new Dictionary<string, List<DateTime?>>();
+                var objectsAffectingScore = new List<(string issueKey, double days)>();
+                foreach (var repo in repos)
+                {
+                    var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
+                    var environments = await repoResource.EnvironmentsResource.ListEnvironmentsAsync();
+                    var prodEnvironmentUUID = environments.First(x => x.name.ToLower().Contains("prod")).uuid;
+                    var deployments = await _bitbucket.GetAsync<DeploymentResponse>
+                        ($"/repositories/{workspace.slug}/{repo.slug}/deployments?q=self.state.completed_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}",
+                        new CancellationToken());
 
-                var prodDeployments = deployments.Values.Where(x => x.State.Name == "COMPLETED" && x.Environment.Uuid == prodEnvironmentUUID)
-                    .OrderBy(x => x.State.CompletedOn).ToList();
-                if (!prodDeployments?.Any() ?? true)
-                {
-                    continue;
+                    var prodDeployments = deployments.Values.Where(x => x.State.Name == "COMPLETED" && x.Environment.Uuid == prodEnvironmentUUID)
+                        .OrderBy(x => x.State.CompletedOn).ToList();
+                    if (!prodDeployments?.Any() ?? true)
+                    {
+                        continue;
+                    }
+                    var dates = new List<DateTime?>();
+                    foreach (var prodDeployment in prodDeployments!)
+                    {
+                        var commit = repoResource.GetCommit(prodDeployment.Release.Commit.Hash);
+                        dates.Add(DateTime.Parse(commit.date));
+                    }
+                    prodCommitsForRepositories.Add(repo.slug, dates);
                 }
-                var dates = new List<DateTime?>();
-                foreach(var prodDeployment in prodDeployments!)
+                foreach (var issue in issues.Where(x => x.Status.Name == "Done" && !x.Type.IsSubTask))
                 {
-                    var commit = repoResource.GetCommit(prodDeployment.Release.Commit.Hash);
-                    dates.Add(DateTime.Parse(commit.date));
+                    var response = await _jira.RestClient.ExecuteRequestAsync<PullRequestResponse>(RestSharp.Method.GET,
+                        $"/rest/dev-status/1.0/issue/detail?issueId={issue.JiraIdentifier}&applicationType=bitbucket&dataType=pullrequest");
+                    var pullRequest = response.Detail.First().PullRequests.Where(x => x.Status == "MERGED").MaxByOrDefault(x => x.LastUpdate);
+                    if (pullRequest == null)
+                    {
+                        continue;
+                    }
+                    var nearestDeployment = prodCommitsForRepositories[pullRequest.RepositoryName].Where(x => x > pullRequest.LastUpdate).Order().FirstOrDefault();
+                    if (nearestDeployment != null)
+                    {
+                        objectsAffectingScore.Add((issue.Key.Value, (nearestDeployment.Value - issue.Created!.Value).TotalMinutes / (60 * 24))); //to days
+                    }
                 }
-                prodCommitsForRepositories.Add(repo.slug, dates);
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = objectsAffectingScore.Select(x => x.days).Average(),
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
             }
-            foreach (var issue in issues.Where(x => x.Status.Name == "Done" && !x.Type.IsSubTask))
+            catch (Exception ex)
             {
-                var response = await _jira.RestClient.ExecuteRequestAsync<PullRequestResponse>(RestSharp.Method.GET,
-                    $"/rest/dev-status/1.0/issue/detail?issueId={issue.JiraIdentifier}&applicationType=bitbucket&dataType=pullrequest");
-                var pullRequest = response.Detail.First().PullRequests.MaxBy(x => x.LastUpdate);
-                if (pullRequest?.Status != "MERGED")
-                {
-                    continue;
-                }
-                var nearestDeployment = prodCommitsForRepositories[pullRequest.RepositoryName].Where(x => x > pullRequest.LastUpdate).Order().FirstOrDefault();
-                if (nearestDeployment != null)
-                {
-                    objectsAffectingScore.Add((issue.Key.Value, (nearestDeployment.Value - issue.Created!.Value).TotalMinutes / (60 * 24))); //to days
-                }
+                _logger.LogError(ex.ToString());
             }
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
-            {
-                MetricEnum = MetricEnum,
-                Score = objectsAffectingScore.Select(x => x.days).Average(),
-                ObjectsAffectingScore = objectsAffectingScore.Serialize()
-            });
-            await _context.SaveChangesAsync();
-
         }
     }
 }

@@ -18,7 +18,15 @@ namespace MetricDashboard.Scraper.MetricScrapers
 
         public async Task Calculate()
         {
+            try
+            {
+
             throw new NotImplementedException();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+            }
         }
     }
 }

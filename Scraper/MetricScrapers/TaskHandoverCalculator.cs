@@ -31,24 +31,31 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            using var _context = _dbFactory.CreateDbContext();
-            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-            var issues = _jira.GetCachedIssues(globalSettings);
-            var objectsAffectingScore = new List<(string issueKey, int countOfPeopleWorking)>();
-            var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze" };
-            foreach (var issue in issues)
+            try
             {
-                var countOfPeopleWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
-                    .Where(x => notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y))).Select(x => x.Assignee).Distinct().Count();
-                objectsAffectingScore.Add((issue.Key.Value, countOfPeopleWorking));
+                using var _context = _dbFactory.CreateDbContext();
+                var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+                var issues = _jira.GetCachedIssues(globalSettings);
+                var objectsAffectingScore = new List<(string issueKey, int countOfPeopleWorking)>();
+                var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze" };
+                foreach (var issue in issues)
+                {
+                    var countOfPeopleWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
+                        .Where(x => notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y))).Select(x => x.Assignee).Distinct().Count();
+                    objectsAffectingScore.Add((issue.Key.Value, countOfPeopleWorking));
+                }
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = objectsAffectingScore.Average(x => x.countOfPeopleWorking),
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
             }
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+            catch (Exception ex)
             {
-                MetricEnum = MetricEnum,
-                Score = objectsAffectingScore.Average(x => x.countOfPeopleWorking),
-                ObjectsAffectingScore = objectsAffectingScore.Serialize()
-            });
-            await _context.SaveChangesAsync();
+                _logger.LogError(ex.ToString());
+            }
         }
     }
 }

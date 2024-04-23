@@ -25,21 +25,27 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            using var _context = _dbFactory.CreateDbContext();
-            var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-            var issues = _jira.GetCachedIssues(globalSettings);
-            var objectsAffectingScore = new List<(string name, DateTime dateTime)>();
+            try {
+                using var _context = _dbFactory.CreateDbContext();
+                var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
+                var issues = _jira.GetCachedIssues(globalSettings);
+                var objectsAffectingScore = new List<(string name, DateTime dateTime)>();
 
-            objectsAffectingScore = issues.Where(x => !x.Type.IsSubTask && x.Type.Name == "Bug")
-                .Select<Issue, (string name, DateTime dateTime)>(x => (x.Summary, x.Created.Value)).ToList();
+                objectsAffectingScore = issues.Where(x => !x.Type.IsSubTask && x.Type.Name == "Bug")
+                    .Select<Issue, (string name, DateTime dateTime)>(x => (x.Summary, x.Created.Value)).ToList();
 
-            await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
+                {
+                    MetricEnum = MetricEnum,
+                    Score = objectsAffectingScore.Count(),
+                    ObjectsAffectingScore = objectsAffectingScore.Serialize()
+                });
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
             {
-                MetricEnum = MetricEnum,
-                Score = objectsAffectingScore.Count(),
-                ObjectsAffectingScore = objectsAffectingScore.Serialize()
-            });
-            await _context.SaveChangesAsync();
+                _logger.LogError(ex.ToString());
+            }
         }
     }
 }

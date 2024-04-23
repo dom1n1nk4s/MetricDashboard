@@ -1,10 +1,23 @@
 ﻿@using MetricDashboard.Data.Models
+@using MetricDashboard.Services
 @implements IDisposable
 @inject NotificationService _notificationService
+@inject CalculatorService _calculatorService
 @inject IDbContextFactory<ApplicationDbContext> _dbFactory
 
 <RadzenFieldset Text="Global settings" AllowCollapse=true>
     <RadzenStack>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Metric calculation status:" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenText Text="@runningStatus"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenButton Text="Start calculation" Disabled=@isRunning Click="@(() => _calculatorService.Run())"/>
+            </RadzenColumn>
+        </RadzenRow>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
                 <RadzenLabel Text="Scope" />
@@ -29,6 +42,8 @@
     ApplicationDbContext _context;
     GlobalMetricSettings globalSettings;
     string name => "Global settings";
+    string runningStatus => _calculatorService.IsRunning ? "RUNNING" : "STOPPED";
+    bool isRunning => _calculatorService.IsRunning;
     async Task Save()
     {
         try

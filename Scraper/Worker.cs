@@ -10,14 +10,12 @@ namespace MetricDashboard.Scraper
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        private readonly IEnumerable<IMetricCalculator> _calculators;
+        private readonly CalculatorService _calculatorService;
 
-        public Worker(ILogger<Worker> logger, IEnumerable<IMetricCalculator> calculators, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public Worker(ILogger<Worker> logger, CalculatorService calculatorService)
         {
             _logger = logger;
-            _calculators = calculators;
-            _dbFactory = dbFactory;
+            _calculatorService = calculatorService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,27 +25,12 @@ namespace MetricDashboard.Scraper
             {
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    await CalculateMetrics();
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
+                await _calculatorService.Run();
                 await Task.Delay(60 * 60 * 1000, stoppingToken); // 60 minutes
             }
 
-        }
-        private async Task CalculateMetrics()
-        {
-            using (var context = _dbFactory.CreateDbContext())
-            {
-                var metricDAOs = (await context.Metrics.AsNoTracking().ToListAsync()).OrderBy(x => x.MetricEnum).ToList();
-                foreach (var calc in _calculators.ToList().OrderBy(x => x.MetricEnum).Zip(metricDAOs))
-                {
-                    if (!calc.Second.IsDisabled)
-                    {
-                        await calc.First.Calculate();
-                    }
-                }
-                //TODO: calculate system scores here
-            }
         }
     }
 }

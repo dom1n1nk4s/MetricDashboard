@@ -23,5 +23,11 @@ namespace MetricDashboard.Extensions
 
             return JsonSerializer.Deserialize<T>(jsonString, options)!;
         }
+        public static T MaxByOrDefault<T,TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector)
+        {
+            if (!enumerable.Any())
+                return default;
+            return enumerable.MaxBy(keySelector);
+        }
     }
 }
