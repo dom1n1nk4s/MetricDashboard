@@ -29,5 +29,11 @@ namespace MetricDashboard.Extensions
                 return default;
             return enumerable.MaxBy(keySelector);
         }
+        public static T MinByOrDefault<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector)
+        {
+            if (!enumerable.Any())
+                return default;
+            return enumerable.MinBy(keySelector);
+        }
     }
 }

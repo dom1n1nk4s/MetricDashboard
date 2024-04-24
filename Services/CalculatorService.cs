@@ -2,6 +2,9 @@
 using MetricDashboard.Scraper.MetricScrapers;
 using MetricDashboard.Scraper;
 using Microsoft.EntityFrameworkCore;
+using MetricDashboard.Extensions;
+using MetricDashboard.Data.Enums;
+using MetricDashboard.Data.Models;
 
 namespace MetricDashboard.Services
 {
@@ -32,19 +35,60 @@ namespace MetricDashboard.Services
 
             IsRunning = false;
         }
+
         private async Task CalculateMetrics()
         {
-            using (var context = _dbFactory.CreateDbContext())
+            try
             {
-                var metricDAOs = (await context.Metrics.AsNoTracking().ToListAsync()).OrderBy(x => x.MetricEnum).ToList();
-                foreach (var calc in _calculators.ToList().OrderBy(x => x.MetricEnum).Zip(metricDAOs))
+                using (var context = _dbFactory.CreateDbContext())
                 {
-                    if (!calc.Second.IsDisabled)
+                    var metricDAOs = (await context.Metrics.AsNoTracking().ToListAsync()).OrderBy(x => x.MetricEnum).ToList();
+                    foreach (var calc in _calculators.ToList().OrderBy(x => x.MetricEnum).Zip(metricDAOs))
                     {
-                        await calc.First.Calculate();
+                        if (!calc.Second.IsDisabled)
+                        {
+                            await calc.First.Calculate();
+                        }
                     }
+                    //TODO: calculate system scores here
+                    var metricSettings = context.RadialSettings.Include(x => x.ColorRanges).AsNoTracking().ToList();
+                    var metricResults = context.MetricResults.AsNoTracking().GroupBy(x => x.MetricEnum)
+                        .Select(group => group.OrderByDescending(y => y.Date).FirstOrDefault()).ToList();
+                    var metricFinalScores = new List<(MetricSystemEnum systemEnum, int score)>();
+                    foreach (var zip in metricResults.OrderBy(x => x.MetricEnum).Zip(metricSettings.OrderBy(x => x.MetricEnum), metricDAOs))
+                    {
+                        var metricResult = zip.First;
+                        var metricSetting = zip.Second;
+                        var metricDao = zip.Third;
+                        var scoredColor = metricSetting.GetColor(metricResult.Score);
+                        var systemScore = GetColorScore(scoredColor);
+                        metricFinalScores.Add((metricDao.System, systemScore));
+                    }
+                    context.SystemResults.AddRange(metricFinalScores.Select(x => new SystemResult
+                    {
+                        SystemEnum = x.systemEnum,
+                        Score = x.score,
+                    }));
+                    await context.SaveChangesAsync();
                 }
-                //TODO: calculate system scores here
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+            }
+        }
+        public static int GetColorScore(ColorEnum color)
+        {
+            switch (color)
+            {
+                case ColorEnum.RED:
+                    return 1;
+                case ColorEnum.YELLOW:
+                    return 5;
+                case ColorEnum.GREEN:
+                    return 10;
+                default:
+                    throw new ArgumentException("Invalid color enum value.");
             }
         }
     }

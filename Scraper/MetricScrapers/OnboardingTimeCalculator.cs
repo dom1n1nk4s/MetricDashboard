@@ -47,7 +47,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                     return;
                 }
                 var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum() / (60*60*24))); //to days
-                var average = eachPersonsTimeSpent.Select(x => x.Item2).Average();
+                var average = eachPersonsTimeSpent.Any() ? eachPersonsTimeSpent.Select(x => x.Item2).Average() : 0;
 
 
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()

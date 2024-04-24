@@ -14,5 +14,18 @@ namespace MetricDashboard.Data.Models
         public int Step { get; set; } = 26;
         public string PointerUnits { get; set; } = string.Empty;
         //TODO: insert scoring overrides here.
+        public ColorEnum GetColor(double pointerValue)
+        {
+            foreach (var range in ColorRanges)
+            {
+                if (pointerValue >= range.From && pointerValue < range.To)
+                {
+                    return range.Color;
+                }
+            }
+
+            throw new ArgumentOutOfRangeException("pointerValue", "No color range found for the given value.");
+        }
     }
+
 }

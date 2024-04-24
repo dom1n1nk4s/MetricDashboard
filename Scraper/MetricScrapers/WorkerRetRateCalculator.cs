@@ -41,7 +41,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                     objectsAffectingScore.Add(new(user.DisplayName, firstIssue.Value, lastIssue.Value));
                 }
 
-                var score = objectsAffectingScore.Select(x => CalculateMonthDifference(x.ActiveFrom, x.ActiveTo)).Average();
+                var score = objectsAffectingScore.Any() ? objectsAffectingScore.Select(x => CalculateMonthDifference(x.ActiveFrom, x.ActiveTo)).Average() : 0;
 
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {

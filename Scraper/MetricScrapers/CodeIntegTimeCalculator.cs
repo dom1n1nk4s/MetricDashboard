@@ -44,7 +44,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 {
                     var response = await _jira.RestClient.ExecuteRequestAsync<PullRequestResponse>(RestSharp.Method.GET,
                         $"/rest/dev-status/1.0/issue/detail?issueId={issue.JiraIdentifier}&applicationType=bitbucket&dataType=pullrequest");
-                    var pullRequest = response.Detail.First().PullRequests.Where(x => x.Status == "MERGED").MaxByOrDefault(x => x.LastUpdate);
+                    var pullRequest = response.Detail.First().PullRequests.Where(x => x.Status.ToLower() == "merged").MaxByOrDefault(x => x.LastUpdate);
                     if (pullRequest == null)
                     {
                         continue;
@@ -54,7 +54,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
-                    Score = objectsAffectingScore.Select(x => x.hours).Average(),
+                    Score = objectsAffectingScore.Any() ? objectsAffectingScore.Select(x => x.hours).Average() : 0,
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });
                 await _context.SaveChangesAsync();

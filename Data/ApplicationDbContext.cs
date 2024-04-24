@@ -13,6 +13,7 @@ namespace MetricDashboard.Data
         public virtual DbSet<RadialSettings> RadialSettings { get; set; }
         public virtual DbSet<ColorRange> ColorRanges { get; set; }
         public virtual DbSet<GlobalMetricSettings> GlobalMetricSettings { get; set; }
+        public virtual DbSet<SystemResult> SystemResults { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
