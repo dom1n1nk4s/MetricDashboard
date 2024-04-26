@@ -51,6 +51,7 @@ namespace MetricDashboard.Services
                         }
                     }
                     //TODO: calculate system scores here
+                    var globalSettings = context.GlobalMetricSettings.First(x => x.Id == 1);
                     var metricSettings = context.RadialSettings.Include(x => x.ColorRanges).AsNoTracking().ToList();
                     var metricResults = context.MetricResults.AsNoTracking().GroupBy(x => x.MetricEnum)
                         .Select(group => group.OrderByDescending(y => y.Date).FirstOrDefault()).ToList();
@@ -61,32 +62,32 @@ namespace MetricDashboard.Services
                         var metricSetting = zip.Second;
                         var metricDao = zip.Third;
                         var scoredColor = metricSetting.GetColor(metricResult.Score);
-                        var systemScore = GetColorScore(scoredColor);
+                        var systemScore = GetColorScore(scoredColor, globalSettings);
                         metricFinalScores.Add((metricDao.System, systemScore));
                     }
-                    context.SystemResults.AddRange(metricFinalScores.Select(x => new SystemResult
+                    context.SystemResults.AddRange(metricFinalScores.GroupBy(x => x.systemEnum).Select(x => new SystemResult
                     {
-                        SystemEnum = x.systemEnum,
-                        Score = x.score,
+                        SystemEnum = x.Key,
+                        Score = x.Select(y => y.score).Average(),
                     }));
                     await context.SaveChangesAsync();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
             }
         }
-        public static int GetColorScore(ColorEnum color)
+        public static int GetColorScore(ColorEnum color, GlobalMetricSettings globalMetricSettings)
         {
             switch (color)
             {
                 case ColorEnum.RED:
-                    return 1;
+                    return globalMetricSettings.RedCalculationValue;
                 case ColorEnum.YELLOW:
-                    return 5;
+                    return globalMetricSettings.YellowCalculationValue;
                 case ColorEnum.GREEN:
-                    return 10;
+                    return globalMetricSettings.GreenCalculationValue;
                 default:
                     throw new ArgumentException("Invalid color enum value.");
             }

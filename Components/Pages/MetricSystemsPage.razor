@@ -19,6 +19,7 @@
     string GetMetricCountText(int c) => $"Enabled metrics: {c}";
     class SystemMiniInfo
     {
+        public MetricSystemEnum SystemEnum { get; set; }
         public string Name { get; set; }
         public double Score { get; set; }
         public int EnabledMetricCount { get; set; }
@@ -37,8 +38,13 @@
                     {
                         Name = x.Key.ToString(),
                         EnabledMetricCount = x.Count(y => !y.IsDisabled),
-                        // Score = ...
+                        SystemEnum = x.Key,
                     }).AsEnumerable().OrderBy(x => x.Name).ToArray();
+                var systemResults = _context.SystemResults.AsNoTracking().GroupBy(x => x.SystemEnum).Select(group => group.OrderByDescending(y => y.Date).FirstOrDefault()).ToList();
+                foreach(var system in systems)
+                {
+                    system.Score = systemResults.FirstOrDefault(x => x.SystemEnum == system.SystemEnum)?.Score ?? 0;
+                }
             }
         }
         catch (Exception e)

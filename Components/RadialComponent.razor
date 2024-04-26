@@ -5,11 +5,9 @@
 <RadzenRadialGauge Style="@Style">
     <RadzenRadialGaugeScale StartAngle="-150" EndAngle="150" Step="@Settings.Step" Min="@Settings.Start"
                             Max="@Settings.End" TickPosition=GaugeTickPosition.Inside>
-        <RadzenRadialGaugeScalePointer Value="@PointerValue" Length="0.6" ShowValue="true">
+        <RadzenRadialGaugeScalePointer  Value="@ClampedPointerValue" Length="1" ShowValue="true">
             <Template Context="pointer">
-                <h4>
-                    @PointerValue.ToString("N1") <sub>@Settings.PointerUnits</sub>
-                </h4>
+
             </Template>
         </RadzenRadialGaugeScalePointer>
         @{
@@ -20,18 +18,23 @@
         }
     </RadzenRadialGaugeScale>
 </RadzenRadialGauge>
+<h4 style="text-align:center;">
+    @PointerValue.ToString("N1") <sub>@Settings.PointerUnits</sub>
+</h4>
 
 @code {
-    //TODO: implement scoring overrides (onboarding time yellow is worth 7 or smth.)
     [Parameter]
     public RadialSettings Settings { get; set; }
     [Parameter]
     public string Style { get; set; }
     [Parameter]
     public double PointerValue { get; set; }
+    double ClampedPointerValue => Math.Max(Math.Min(Settings.End, PointerValue), Settings.Start);
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
         Settings ??= new();
     }
+
+
 }

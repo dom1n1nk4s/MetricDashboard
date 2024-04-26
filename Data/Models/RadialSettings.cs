@@ -16,6 +16,10 @@ namespace MetricDashboard.Data.Models
         //TODO: insert scoring overrides here.
         public ColorEnum GetColor(double pointerValue)
         {
+            if(!ColorRanges.Any())
+            {
+                return ColorEnum.GREEN;
+            }
             foreach (var range in ColorRanges)
             {
                 if (pointerValue >= range.From && pointerValue < range.To)
@@ -23,8 +27,7 @@ namespace MetricDashboard.Data.Models
                     return range.Color;
                 }
             }
-
-            throw new ArgumentOutOfRangeException("pointerValue", "No color range found for the given value.");
+            return ColorEnum.RED;
         }
     }
 

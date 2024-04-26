@@ -34,6 +34,30 @@
                 <RadzenNumeric ShowUpDown=false Min="1" @bind-Value=@globalSettings.SprintLength Style="width: 13rem" />
             </RadzenColumn>
         </RadzenRow>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Green pointer calculation value" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenNumeric ShowUpDown=false Min="1" Max="10" @bind-Value=@globalSettings.GreenCalculationValue Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Yellow pointer calculation value" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenNumeric ShowUpDown=false Min="1" Max="10" @bind-Value=@globalSettings.YellowCalculationValue Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Red pointer calculation value" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenNumeric ShowUpDown=false Min="1" Max="10" @bind-Value=@globalSettings.RedCalculationValue Style="width: 13rem" />
+            </RadzenColumn>
+        </RadzenRow>
     </RadzenStack>
 </RadzenFieldset>
 @code {

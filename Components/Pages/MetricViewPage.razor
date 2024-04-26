@@ -1,6 +1,7 @@
 ﻿@page "/metrics/{_metricName}"
 @using MetricDashboard.Data.Enums
 @using MetricDashboard.Data.Models
+@using MetricDashboard.Helpers
 @using Microsoft.Extensions.Localization
 @inject NavigationManager _navigation
 
@@ -13,7 +14,7 @@
         <div class="row">
             <div class="col-md-8 offset-md-2 center-column">
                 <div class="border my-4">
-                    <RadialComponent Settings="metric.RadialSettings" />
+                    <RadialComponent Settings="metric.RadialSettings" PointerValue="pointerValue" />
                     <hr />
                     <RadzenText Text="@L[_metricName + ".Name"]" />
                 </div>
@@ -21,12 +22,22 @@
                     <RadzenText Text="@L[_metricName + ".Desc"]" />
                 </div>
                 <div class="border p-4">
-                    <RadzenText Text="Objects affecting score"/>
-                    <ul class="list-unstyled">
-                        <li>Item 1</li>
-                        <li>Item 2</li>
-                        <li>Item 3</li>
-                    </ul>
+                    <RadzenText Text="Objects affecting score" />
+                    @if (objectsAffectingScore != null && objectsAffectingScore.Any())
+                    {
+                        <RadzenPanel>
+                            <RadzenHeading Size="H3">Objects affecting score</RadzenHeading>
+                            <RadzenListBox Data="@objectsAffectingScore" TValue="string" Style="max-height: 300px;">
+                                <Template Context="item">
+                                    <div>@item</div>
+                                </Template>
+                            </RadzenListBox>
+                        </RadzenPanel>
+                    }
+                    else
+                    {
+                        <p>No metric values to display.</p>
+                    }
                 </div>
             </div>
         </div>
@@ -47,14 +58,16 @@
 </style>
 
 
-@code { //TODO: get objects affecting metrics and insert as tempalte list
+@code {
+    //TODO: get objects affecting metrics and insert as tempalte list
     [Parameter]
     public string _metricName { get; set; }
 
     MetricEnum _metricType;
     ApplicationDbContext _context;
     Metric metric;
-
+    string[] objectsAffectingScore;
+    double pointerValue;
 
     protected override void OnParametersSet()
     {
@@ -65,7 +78,10 @@
 
         _context ??= _dbFactory.CreateDbContext();
         metric = _context.Metrics.AsNoTracking().Include(x => x.RadialSettings).ThenInclude(x => x.ColorRanges)
-        .First(x => x.MetricEnum == _metricType);
+            .First(x => x.MetricEnum == _metricType);
+        var metricResult = _context.MetricResults.Where(x => x.MetricEnum == _metricType).OrderByDescending(x => x.Date).FirstOrDefault();
+        pointerValue = metricResult?.Score ?? default;
+        objectsAffectingScore = Helper.GetObjectsAffectingScore(_metricType, metricResult?.ObjectsAffectingScore ?? string.Empty);
         base.OnParametersSet();
     }
 }

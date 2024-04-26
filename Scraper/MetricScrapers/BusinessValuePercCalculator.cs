@@ -32,14 +32,17 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var issues = _jira.GetCachedIssues(globalSettings);
-                var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking)>();
+                var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking, double countOfTotalHours)>();
                 var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze", "code review", "PR", "pull request", "merge request" };
                 foreach (var issue in issues)
                 {
-                    var hoursSpentWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
+                    var subtasks = (await issue.GetSubTasksAsync()).ToList();
+                    var hoursSpentWorking = subtasks
                         .Where(x => !notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y)))
                         .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0)).Sum(); // to hours
-                    objectsAffectingScore.Add((issue.Key.Value, hoursSpentWorking));
+                    var countOfTotalHours = subtasks //TODO: FIX TIMETRACKING NULL HERE
+                        .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0)).Sum(); // to hours
+                    objectsAffectingScore.Add((issue.Key.Value, hoursSpentWorking, countOfTotalHours));
                 }
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
