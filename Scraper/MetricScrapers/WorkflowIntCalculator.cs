@@ -38,7 +38,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var objectsAffectingScore = new List<(string issueKey, double durationOnHoldInHours)>();
                 var issues = _jira.GetCachedIssues(globalSettings);
-                foreach (var issue in issues)
+                foreach (var issue in issues.Where(x => !x.Type.IsSubTask))
                 {
                     var changeLogs = await issue.GetChangeLogsAsync(); //might need to order by .CreatedDate, check on debugger
                     var onHoldChanges = changeLogs.Where(x => x.Items.Any(y => y.FromValue == "On hold"));
@@ -52,6 +52,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                             totalTimeOnHold += durationOnHold;
                         }
                     }
+
                     objectsAffectingScore.Add((issue.Key.Value, totalTimeOnHold.TotalHours));
                 }
 

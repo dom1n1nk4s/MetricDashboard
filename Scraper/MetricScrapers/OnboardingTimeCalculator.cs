@@ -46,7 +46,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                     _logger.LogError($"Failed to get issue for {nameof(OnboardingTimeCalculator)}");
                     return;
                 }
-                var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.AccountId).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum() / (60*60*24))); //to days
+                var eachPersonsTimeSpent = (await issue.GetWorklogsAsync()).GroupBy(x => x.AuthorUser.Email).Select(x => (x.Key, x.Select(z => z.TimeSpentInSeconds).Sum() / (60.0*60*24))); //to days
                 var average = eachPersonsTimeSpent.Any() ? eachPersonsTimeSpent.Select(x => x.Item2).Average() : 0;
 
 

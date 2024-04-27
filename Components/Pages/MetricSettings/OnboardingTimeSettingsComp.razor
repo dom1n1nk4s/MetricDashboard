@@ -19,7 +19,9 @@
                 <RadzenAutoComplete @bind-Value=@onboardingTaskInput Data=@issues LoadData=@OnLoadData Style="width: 13rem" />
             </RadzenColumn>
         </RadzenRow>
-        <GenericRadialSettingsComp MetricEnum="_metricType" />
+        <RadzenFieldset Text="Radial settings" AllowCollapse=true Collapsed=true>
+            <GenericRadialSettingsComp MetricEnum="_metricType" />
+        </RadzenFieldset>
     </RadzenStack>
 </RadzenFieldset>
 
@@ -47,7 +49,7 @@
     {
         try
         {
-            if(initialTaskValue == onboardingTaskInput)
+            if (initialTaskValue == onboardingTaskInput)
             {
                 return;
             }

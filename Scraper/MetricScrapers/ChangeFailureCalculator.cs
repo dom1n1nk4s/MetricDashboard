@@ -89,7 +89,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
-                    Score = objectsAffectingScore.Any() ? objectsAffectingScore.Select(x => (1.0 * x.incidentCausingDeploymentCount) / x.totalDeploymentCount).Average() : 0,
+                    Score = objectsAffectingScore.Any() ? objectsAffectingScore.Select(x => (100.0 * x.incidentCausingDeploymentCount) / x.totalDeploymentCount).Average() : 0,
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });
                 await _context.SaveChangesAsync();

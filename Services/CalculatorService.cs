@@ -56,11 +56,12 @@ namespace MetricDashboard.Services
                     var metricResults = context.MetricResults.AsNoTracking().GroupBy(x => x.MetricEnum)
                         .Select(group => group.OrderByDescending(y => y.Date).FirstOrDefault()).ToList();
                     var metricFinalScores = new List<(MetricSystemEnum systemEnum, int score)>();
-                    foreach (var zip in metricResults.OrderBy(x => x.MetricEnum).Zip(metricSettings.OrderBy(x => x.MetricEnum), metricDAOs))
+                    foreach (var (metricResult, metricSetting, metricDao) in metricResults.OrderBy(x => x.MetricEnum).Zip(metricSettings.OrderBy(x => x.MetricEnum), metricDAOs))
                     {
-                        var metricResult = zip.First;
-                        var metricSetting = zip.Second;
-                        var metricDao = zip.Third;
+                        if (metricDao.IsDisabled)
+                        {
+                            continue;
+                        }
                         var scoredColor = metricSetting.GetColor(metricResult.Score);
                         var systemScore = GetColorScore(scoredColor, globalSettings);
                         metricFinalScores.Add((metricDao.System, systemScore));

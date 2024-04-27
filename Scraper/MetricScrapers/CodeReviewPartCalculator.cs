@@ -53,14 +53,15 @@ namespace MetricDashboard.Scraper.MetricScrapers
                             States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList(),
                             Filter = $"created_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}"
                         });
-                    foreach (var pullRequest in pullRequests)
+                    foreach (var stubPullRequest in pullRequests)
                     {
+                        var pullRequest =await repoResource.PullRequestsResource().PullRequestResource(stubPullRequest.id.Value).GetPullRequestAsync();
                         var activities = repoResource.PullRequestsResource().PullRequestResource(pullRequest.id.Value).ListPullRequestActivities();
                         var uniqueApprovals = activities.Where(x => x.approval != null).Select(x => x.approval.user.account_id).ToList();
                         var uniqueComments = activities.Where(x => x.comment != null).Select(x => x.comment.user.account_id).ToList();
 
                         var activeParticipantCount = uniqueApprovals.Concat(uniqueComments).Distinct().Count() * 1.0;
-                        objectsAffectingScore.Add((pullRequest.title, activeParticipantCount / Math.Max(pullRequest?.reviewers?.Count ?? 1, 1)));
+                        objectsAffectingScore.Add((pullRequest.title, 100*activeParticipantCount / Math.Max(pullRequest?.reviewers?.Count ?? 1, 1)));
                     }
                 }
 

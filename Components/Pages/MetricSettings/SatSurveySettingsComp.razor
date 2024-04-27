@@ -13,13 +13,15 @@
     <RadzenStack>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="New score:"/>
+                <RadzenLabel Text="New score:" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="4">
                 <RadzenNumeric Min="0" @bind-Value=score Style="width: 13rem" />
             </RadzenColumn>
         </RadzenRow>
-        <GenericRadialSettingsComp MetricEnum="_metricType" />
+        <RadzenFieldset Text="Radial settings" AllowCollapse=true Collapsed=true>
+            <GenericRadialSettingsComp MetricEnum="_metricType" />
+        </RadzenFieldset>
     </RadzenStack>
 </RadzenFieldset>
 
@@ -34,7 +36,10 @@
     {
         try
         {
-
+            if(score == 0)
+            {
+                return;
+            }
             _context ??= _dbFactory.CreateDbContext();
 
             await _context.MetricResults.AddAsync(new MetricResult

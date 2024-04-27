@@ -35,20 +35,24 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 var issues = _jira.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking, double countOfTotalHours)>();
                 var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze", "code review", "PR", "pull request", "merge request" };
-                foreach (var issue in issues)
+                foreach (var issue in issues.Where(x => !x.Type.IsSubTask))
                 {
                     var subtasks = (await issue.GetSubTasksAsync()).ToList();
+                    var countOfTotalHours = subtasks
+                        .Select(x => x.TimeTrackingData.TimeSpentInSeconds ?? 0 / (60.0 * 60.0)).Sum(); // to hours
+                    if (countOfTotalHours == 0)
+                    {
+                        continue;
+                    }
                     var hoursSpentWorking = subtasks
                         .Where(x => !notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y)))
-                        .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0)).Sum(); // to hours
-                    var countOfTotalHours = subtasks //TODO: FIX TIMETRACKING NULL HERE
-                        .Select(x => x.TimeTrackingData.TimeSpentInSeconds.Value / (60.0 * 60.0)).Sum(); // to hours
+                        .Select(x => x.TimeTrackingData.TimeSpentInSeconds ?? 0 / (60.0 * 60.0)).Sum(); // to hours
                     objectsAffectingScore.Add((issue.Key.Value, hoursSpentWorking, countOfTotalHours));
                 }
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
-                    Score = objectsAffectingScore.Average(x => x.countOfHoursWorking),
+                    Score = objectsAffectingScore.Average(x => 100 * x.countOfHoursWorking / x.countOfTotalHours),
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });
                 await _context.SaveChangesAsync();

@@ -42,6 +42,10 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 {
                     var countOfPeopleWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
                         .Where(x => notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y))).Select(x => x.Assignee).Distinct().Count();
+                    if(countOfPeopleWorking == 0)
+                    {
+                        continue;
+                    }
                     objectsAffectingScore.Add((issue.Key.Value, countOfPeopleWorking));
                 }
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()

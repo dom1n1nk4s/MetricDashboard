@@ -5,7 +5,7 @@
 @inject IDbContextFactory<ApplicationDbContext> _dbFactory
 @inject IStringLocalizer<Locales.Resources> L
 @inject NotificationService _notificationService
-<RadzenFieldset Text="Radial settings" AllowCollapse=true Collapsed=true>
+
     <div class="col-md-4">
         <RadzenLabel Text="Pointer units"></RadzenLabel>
         <br />
@@ -136,7 +136,6 @@
         }
     }
 
-</RadzenFieldset>
 @code {
     string name => @L[MetricEnum.ToString() + ".Name"];
     [Parameter, EditorRequired]
