@@ -1,5 +1,4 @@
 ﻿using Atlassian.Jira;
-using MetricDashboard.Components.Account.Pages.Manage;
 using MetricDashboard.Data;
 using MetricDashboard.Data.Enums;
 using MetricDashboard.Extensions;

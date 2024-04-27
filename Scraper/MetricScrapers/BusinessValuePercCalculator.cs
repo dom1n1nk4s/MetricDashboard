@@ -28,7 +28,8 @@ namespace MetricDashboard.Scraper.MetricScrapers
         }
         public async Task Calculate()
         {
-            try {
+            try
+            {
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var issues = _jira.GetCachedIssues(globalSettings);

@@ -1,10 +1,8 @@
-﻿@using MetricDashboard.Components.Account.Shared
-@using MetricDashboard.Components.Pages
+﻿@using MetricDashboard.Components.Pages
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <RedirectToLogin />
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

@@ -1,5 +1,4 @@
 using MetricDashboard.Components;
-using MetricDashboard.Components.Account;
 using MetricDashboard.Data;
 using MetricDashboard.Models;
 using MetricDashboard.Scraper;
@@ -25,9 +24,6 @@ namespace MetricDashboard
             builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
             builder.Services.AddHostedService<Worker>();
             builder.Services.AddCascadingAuthenticationState();
-            builder.Services.AddScoped<IdentityUserAccessor>();
-            builder.Services.AddScoped<IdentityRedirectManager>();
-            builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
             builder.Services.AddSingleton<JiraService>();
             builder.Services.AddSingleton<BitBucketService>();
             builder.Services.AddSingleton<CalculatorService>();
@@ -70,8 +66,6 @@ namespace MetricDashboard
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
 
-            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
             var app = builder.Build();
 
             string[] supportedCultures = ["en-US"];
@@ -99,9 +93,6 @@ namespace MetricDashboard
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
-
-            // Add additional endpoints required by the Identity /Account Razor components.
-            app.MapAdditionalIdentityEndpoints();
 
             app.Run();
         }
