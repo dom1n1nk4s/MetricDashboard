@@ -77,7 +77,7 @@ namespace MetricDashboard.Data
                 new GlobalMetricSettings
                 { Id = 1, Scope = TimeScopeEnum.SIX_MONTHS, SprintLength = 14, GreenCalculationValue = 10, YellowCalculationValue = 5, RedCalculationValue = 1 }
             ]);
-            //TODO: export db and run sql scripts for seeding radialsettings and color ranges. cant be bothered to do it in c#
+            #region radialSettings seed
             builder.Entity<RadialSettings>().HasData(
                 new RadialSettings
                 {
@@ -240,6 +240,8 @@ namespace MetricDashboard.Data
                     MetricId = 6
                 }
             );
+            #endregion
+            #region colorRange seed
             builder.Entity<ColorRange>().HasData(
                 new ColorRange
                 {
@@ -626,6 +628,7 @@ namespace MetricDashboard.Data
                     Color = ColorEnum.RED
                 }
             );
+            #endregion
         }
     }
 }

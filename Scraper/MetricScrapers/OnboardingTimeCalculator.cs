@@ -28,6 +28,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
             {
 
                 using var _context = _dbFactory.CreateDbContext();
+                var globalSettings = await _context.GlobalMetricSettings.FirstAsync(x => x.Id == 1);
                 var settings = (await _context.Metrics.AsNoTracking().FirstAsync(x => x.MetricEnum == MetricEnum))?.Settings?.Deserialize<OnboardingTimeSettings>();
                 if (settings == null)
                 {
@@ -53,6 +54,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
+                    TimeScope = globalSettings.Scope,
                     Score = average,
                     ObjectsAffectingScore = eachPersonsTimeSpent.Serialize()
                 });

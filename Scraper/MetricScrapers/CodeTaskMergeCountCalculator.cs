@@ -60,6 +60,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
+                    TimeScope = globalSettings.Scope,
                     Score = objectsAffectingScore.Select(x => x.taskCount + x.pullRequestCount + x.commitCount).Sum(),
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });

@@ -79,7 +79,19 @@ namespace MetricDashboard.Helpers
 
             return notCoveredRanges;
         }
-       
+        public static string GetCSSColor(ColorEnum? color)
+        {
+            switch (color)
+            {
+                case ColorEnum.GREEN:
+                    return "#00800017";
+                case ColorEnum.YELLOW:
+                    return "#ffff0029";
+                case ColorEnum.RED:
+                    return "#ff00001c";
+            }
+            return string.Empty;
+        }
         public static string[] GetObjectsAffectingScore(MetricEnum metric, string serializedObjects)
         {
             switch (metric)
@@ -111,7 +123,7 @@ namespace MetricDashboard.Helpers
                     return commitCounts.Select(x => $"Repository \"{x.repoName}\" has {x.taskCount} tasks, {x.pullRequestCount} pull requests, and {x.commitCount} commits").ToArray();
                 case MetricEnum.CODE_REVIEW_PARTICIPATION:
                     var reviewParticipation = serializedObjects.Deserialize<List<(string pullRequestName, double participationPercent)>>();
-                    return reviewParticipation.Select(x => $"Pull request \"{x.pullRequestName}\" has a participation rate of {x.participationPercent:P2}").ToArray();
+                    return reviewParticipation.Select(x => $"Pull request \"{x.pullRequestName}\" has a participation rate of {x.participationPercent/100:P2}").ToArray();
                 case MetricEnum.TIME_SPENT_WORKING:
                     var timeSpentWorking = serializedObjects.Deserialize<List<(string issueKey, double countOfHoursPerTask)>>();
                     return timeSpentWorking.Select(x => $"Issue \"{x.issueKey}\" took {x.countOfHoursPerTask:N} hours to complete").ToArray();
@@ -119,7 +131,7 @@ namespace MetricDashboard.Helpers
                     var integrationTimes = serializedObjects.Deserialize<List<(string issueKey, double hours)>>();
                     return integrationTimes.Select(x => $"Issue \"{x.issueKey}\" took {x.hours:N} hours to integrate").ToArray();
                 case MetricEnum.ONBOARDING_TIME:
-                    var onboardingTimes = serializedObjects.Deserialize<List<(string, long)>>();
+                    var onboardingTimes = serializedObjects.Deserialize<List<(string, double)>>();
                     return onboardingTimes.Select(x => $"Onboarding for \"{x.Item1}\" took {x.Item2:N} days").ToArray();
                 case MetricEnum.TASK_HANDOVERS_BEFORE_COMPLETION:
                     var handovers = serializedObjects.Deserialize<List<(string issueKey, int countOfPeopleWorking)>>();
@@ -129,7 +141,7 @@ namespace MetricDashboard.Helpers
                     return interruptionTimes.Select(x => $"Issue \"{x.issueKey}\" was on hold for {x.durationOnHoldInHours:N} hours").ToArray();
                 case MetricEnum.BUSINESS_VALUE_PERCENTAGE:
                     var businessValues = serializedObjects.Deserialize<List<(string issueKey, double countOfHoursWorking, double countOfTotalHours)>>();
-                    return businessValues.Select(x => $"Issue \"{x.issueKey}\" has a business value percentage of {(x.countOfHoursWorking / x.countOfTotalHours) * 100:P2}").ToArray();
+                    return businessValues.Select(x => $"Issue \"{x.issueKey}\" has a business value percentage of {(x.countOfHoursWorking / x.countOfTotalHours):P2}").ToArray();
                 default:
                     return Array.Empty<string>();
             }

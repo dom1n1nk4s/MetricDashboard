@@ -52,6 +52,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
+                    TimeScope = globalSettings.Scope,
                     Score = objectsAffectingScore.Average(x => 100 * x.countOfHoursWorking / x.countOfTotalHours),
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });

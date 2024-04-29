@@ -1,20 +1,64 @@
 ﻿@page "/metric-systems"
+@using MetricDashboard.Helpers
 @rendermode InteractiveServer
 @inject IDbContextFactory<ApplicationDbContext> _dbFactory
 <RadzenDataList WrapItems="true" AllowPaging="false" Data="@systems" TItem="SystemMiniInfo">
     <Template Context="system">
         <RadzenCard Style="width:300px;" class="@(system.EnabledMetricCount == 0 ? "opacity-50" : "")">
-            <NavLink class="nav-link" href="@GetLink(system.Name)">
-                <RadzenText Text="@system.Score.ToString("N1")" />
-                <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
-                <RadzenText Text="@system.Name" />
-                <RadzenText Text="@GetMetricCountText(system.EnabledMetricCount)"/>
-            </NavLink>
+            <RadzenTabs>
+                <Tabs>
+                    <RadzenTabsItem Text="Score">
+                        <NavLink class="nav-link" href="@GetLink(system.Name)">
+                            <RadzenArcGauge Style="width: 100%; height: 300px;">
+                                <RadzenArcGaugeScale Min="0" Max="10" StartAngle="0" EndAngle="360" Fill="rgba(135, 135, 135, 0.5)">
+                                    <RadzenArcGaugeScaleValue Value=@system.Score Fill="@GetFillColor(system.Score)">
+                                        <Template>
+                                            <svg width="100%" viewBox="0 0 240 120">
+                                                <text style="font-size: xx-large" x="90" y="40">
+                                                    @system.Score.ToString("N")
+                                                </text>
+                                            </svg>
+                                        </Template>
+                                    </RadzenArcGaugeScaleValue>
+                                </RadzenArcGaugeScale>
+                            </RadzenArcGauge>
+                        </NavLink>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Chart" Disabled=!system.ChartItems.Any()>
+                        <RadzenChart>
+                            <RadzenLineSeries Smooth="true" Data="@system.ChartItems" CategoryProperty="Date" ValueProperty="Value">
+                                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+                                <RadzenSeriesDataLabels Visible="false" />
+                            </RadzenLineSeries>
+                            <RadzenCategoryAxis Padding="20" />
+                            <RadzenValueAxis Min=0 Max=10 Step=1 FormatString="{0:N}">
+                                <RadzenGridLines Visible="true" />
+                                <RadzenAxisTitle Text="Score" />
+                            </RadzenValueAxis>
+                        </RadzenChart>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+            <hr style="border: none; background-color: rgba(0,0,0,.2); height: 1px; margin: 1rem 0;" />
+            <RadzenText Text="@system.Name" />
+            <RadzenText Text="@GetMetricCountText(system.EnabledMetricCount)" />
         </RadzenCard>
     </Template>
 </RadzenDataList>
 
 @code {
+    string GetFillColor(double score)
+    {
+        score = Math.Max(0, Math.Min(10, score));
+
+        double normalizedScore = score / 10.0;
+
+        string[] colors = { "#FF0000", "#FF3300", "#FF6600", "#FF9900", "#FFCC00", "#FFFF00", "#CCFF00", "#99FF00", "#66FF00", "#33FF00", "#00FF00" };
+
+        int index = (int)Math.Round(normalizedScore * (colors.Length - 1));
+
+        return colors[index];
+    }
     string GetLink(string m) => $"metric-systems/{m}";
     string GetMetricCountText(int c) => $"Enabled metrics: {c}";
     class SystemMiniInfo
@@ -23,6 +67,7 @@
         public string Name { get; set; }
         public double Score { get; set; }
         public int EnabledMetricCount { get; set; }
+        public ChartItem[] ChartItems { get; set; } = Array.Empty<ChartItem>();
     }
     SystemMiniInfo[] systems = Array.Empty<SystemMiniInfo>();
     ApplicationDbContext _context;
@@ -34,6 +79,7 @@
 
             if (_context is not null && _context.Metrics is not null)
             {
+                var globalSettings = await _context.GlobalMetricSettings.AsNoTracking().FirstAsync(x => x.Id == 1);
                 systems = _context.Metrics.AsNoTracking().GroupBy(x => x.System).Select(x => new SystemMiniInfo
                     {
                         Name = x.Key.ToString(),
@@ -41,9 +87,16 @@
                         SystemEnum = x.Key,
                     }).AsEnumerable().OrderBy(x => x.Name).ToArray();
                 var systemResults = _context.SystemResults.AsNoTracking().GroupBy(x => x.SystemEnum).Select(group => group.OrderByDescending(y => y.Date).FirstOrDefault()).ToList();
-                foreach(var system in systems)
+                foreach (var system in systems)
                 {
                     system.Score = systemResults.FirstOrDefault(x => x.SystemEnum == system.SystemEnum)?.Score ?? 0;
+                    system.ChartItems = _context.SystemResults.AsNoTracking().Where(x => x.SystemEnum == system.SystemEnum && x.TimeScope == globalSettings.Scope)
+                    .GroupBy(x => x.Date.Date).Select(x => x.OrderByDescending(y => y.Date).First())
+                    .AsEnumerable().Select(x => new ChartItem
+                        {
+                            Date = x.Date.ToShortDateString(),
+                            Value = x.Score,
+                        }).ToArray();
                 }
             }
         }

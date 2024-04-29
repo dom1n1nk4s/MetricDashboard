@@ -41,10 +41,11 @@
                 return;
             }
             _context ??= _dbFactory.CreateDbContext();
-
+            var globalSettings = await _context.GlobalMetricSettings.FirstAsync(x => x.Id == 1);
             await _context.MetricResults.AddAsync(new MetricResult
                 {
                     MetricEnum = _metricType,
+                    TimeScope = globalSettings.Scope,
                     ObjectsAffectingScore = "Manually entered.",
                     Score = score
                 });

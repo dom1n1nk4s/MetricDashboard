@@ -36,9 +36,24 @@
                     }
                     else
                     {
-                        <p>No metric values to display.</p>
+                        <p>No objects to display.</p>
                     }
                 </div>
+
+                @if (chartItems.Any())
+                {
+                    <RadzenChart>
+                        <RadzenLineSeries Smooth="true" Data="@chartItems" CategoryProperty="Date" ValueProperty="Value">
+                            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+                            <RadzenSeriesDataLabels Visible="false" />
+                        </RadzenLineSeries>
+                        <RadzenCategoryAxis Padding="20" />
+                        <RadzenValueAxis FormatString="{0:N}">
+                            <RadzenGridLines Visible="true" />
+                            <RadzenAxisTitle Text="@L[_metricName + ".Name"]" />
+                        </RadzenValueAxis>
+                    </RadzenChart>
+                }
             </div>
         </div>
     </div>
@@ -66,8 +81,9 @@
     MetricEnum _metricType;
     ApplicationDbContext _context;
     Metric metric;
-    string[] objectsAffectingScore;
+    string[] objectsAffectingScore = Array.Empty<string>();
     double pointerValue;
+    ChartItem[] chartItems = Array.Empty<ChartItem>();
 
     protected override void OnParametersSet()
     {
@@ -77,11 +93,22 @@
         }
 
         _context ??= _dbFactory.CreateDbContext();
+        var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
         metric = _context.Metrics.AsNoTracking().Include(x => x.RadialSettings).ThenInclude(x => x.ColorRanges)
             .First(x => x.MetricEnum == _metricType);
+        chartItems = _context.MetricResults.AsNoTracking().Where(x => x.MetricEnum == _metricType && x.TimeScope == globalSettings.Scope)
+        .GroupBy(x => x.Date.Date).Select(x => x.OrderByDescending(y => y.Date).First())
+        .AsEnumerable().Select(x => new ChartItem
+            {
+                Date = x.Date.ToShortDateString(),
+                Value = x.Score,
+            }).ToArray();
         var metricResult = _context.MetricResults.Where(x => x.MetricEnum == _metricType).OrderByDescending(x => x.Date).FirstOrDefault();
         pointerValue = metricResult?.Score ?? default;
-        objectsAffectingScore = Helper.GetObjectsAffectingScore(_metricType, metricResult?.ObjectsAffectingScore ?? string.Empty);
+        if (metricResult?.ObjectsAffectingScore != null)
+        {
+            objectsAffectingScore = Helper.GetObjectsAffectingScore(_metricType, metricResult.ObjectsAffectingScore);
+        }
         base.OnParametersSet();
     }
 }

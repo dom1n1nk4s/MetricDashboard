@@ -70,6 +70,7 @@ namespace MetricDashboard.Services
                     {
                         SystemEnum = x.Key,
                         Score = x.Select(y => y.score).Average(),
+                        TimeScope = globalSettings.Scope,
                     }));
                     await context.SaveChangesAsync();
                 }

@@ -89,6 +89,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
+                    TimeScope = globalSettings.Scope,
                     Score = objectsAffectingScore.Any() ? objectsAffectingScore.Select(x => (100.0 * x.incidentCausingDeploymentCount) / x.totalDeploymentCount).Average() : 0,
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });

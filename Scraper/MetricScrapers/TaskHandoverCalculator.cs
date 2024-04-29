@@ -51,7 +51,8 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 await _context.MetricResults.AddAsync(new Data.Models.MetricResult()
                 {
                     MetricEnum = MetricEnum,
-                    Score = objectsAffectingScore.Average(x => x.countOfPeopleWorking),
+                    TimeScope = globalSettings.Scope,
+                    Score = objectsAffectingScore.Average(x => x.countOfPeopleWorking - 1), // -1 due to HANDOVER count 
                     ObjectsAffectingScore = objectsAffectingScore.Serialize()
                 });
                 await _context.SaveChangesAsync();

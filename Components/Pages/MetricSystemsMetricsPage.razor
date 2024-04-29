@@ -1,5 +1,6 @@
 ﻿@page "/metric-systems/{_metricSystemName}"
 @using MetricDashboard.Data.Models
+@using MetricDashboard.Helpers
 @using Microsoft.Extensions.Localization
 @rendermode InteractiveServer
 @inject NavigationManager _navigation
@@ -21,20 +22,8 @@
 
 
 @code {
-    string Style(MetricMiniInfo m) => $"max-width:400px !important; background: {GetTransparentColor(m?.RadialSettings?.GetColor(m.PointerValue))};";
-    string GetTransparentColor(ColorEnum? color)
-    {
-        switch (color)
-        {
-            case ColorEnum.GREEN:
-                return "#00800017";
-            case ColorEnum.YELLOW:
-                return "#ffff0029";
-            case ColorEnum.RED:
-                return "#ff00001c";
-        }
-        return string.Empty;
-    }
+    string Style(MetricMiniInfo m) => $"max-width:400px !important; background: {Helper.GetCSSColor(m?.RadialSettings?.GetColor(m.PointerValue))};";
+
     string GetMetricLink(MetricEnum m) => $"/metrics/{m}";
     [Parameter]
     public string _metricSystemName { get; set; }
