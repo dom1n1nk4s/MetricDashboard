@@ -28,9 +28,8 @@ namespace MetricDashboard.Scraper
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
                 await _calculatorService.Run();
-                await Task.Delay(60 * 60 * 1000, stoppingToken); // 60 minutes
+                await Task.Delay(12 * 60 * 60 * 1000, stoppingToken); // 12 hours
             }
-
         }
     }
 }

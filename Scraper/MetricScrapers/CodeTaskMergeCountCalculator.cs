@@ -39,7 +39,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
 
-                var projectKeys = (await _jira.Projects.GetProjectsAsync()).Select(x => x.Key);
+                var projectKeys = (await _jira.Projects.GetProjectsAsync()).Select(x => x.Key.ToLower());
                 foreach (var repo in repos)
                 {
                     var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
