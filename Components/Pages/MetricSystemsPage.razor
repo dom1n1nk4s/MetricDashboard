@@ -26,8 +26,8 @@
                     </RadzenTabsItem>
                     <RadzenTabsItem Text="Chart" Disabled=!system.ChartItems.Any()>
                         <RadzenChart>
-                            <RadzenLineSeries Smooth="true" Data="@system.ChartItems" CategoryProperty="Date" ValueProperty="Value">
-                                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+                            <RadzenLineSeries Smooth="true" Data="@system.ChartItems" CategoryProperty="Date" ValueProperty="Value" Title="Values" >
+                                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
                                 <RadzenSeriesDataLabels Visible="false" />
                             </RadzenLineSeries>
                             <RadzenCategoryAxis Padding="20" />

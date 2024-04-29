@@ -43,7 +43,7 @@
                 @if (chartItems.Any())
                 {
                     <RadzenChart>
-                        <RadzenLineSeries Smooth="true" Data="@chartItems" CategoryProperty="Date" ValueProperty="Value">
+                        <RadzenLineSeries Smooth="true" Data="@chartItems" CategoryProperty="Date" ValueProperty="Value" Title="Values">
                             <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
                             <RadzenSeriesDataLabels Visible="false" />
                         </RadzenLineSeries>
