@@ -40,7 +40,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 var issues = _jira.GetCachedIssues(globalSettings);
                 foreach (var issue in issues.Where(x => !x.Type.IsSubTask))
                 {
-                    var changeLogs = await issue.GetChangeLogsAsync(); //might need to order by .CreatedDate, check on debugger
+                    var changeLogs = await issue.GetChangeLogsAsync();
                     var onHoldChanges = changeLogs.Where(x => x.Items.Any(y => y.FromValue == "On hold"));
                     var totalTimeOnHold = new TimeSpan();
                     foreach (var onHoldChange in onHoldChanges)

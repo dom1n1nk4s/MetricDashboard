@@ -174,7 +174,7 @@
     <comment>Name</comment>
   </data>
   <data name="DEPLOYMENT_FREQUENCY.Desc" xml:space="preserve">
-    <value>Frequency of deployments per period. This metric measures how often code changes are deployed to production within a specified time frame. It indicates the agility and efficiency of the deployment process, with higher frequencies typically associated with faster delivery cycles and shorter lead times.</value>
+    <value>Frequency of deployments per period. This metric measures how many code changes are deployed to production. It indicates the agility and efficiency of the deployment process, with higher counts typically associated with faster delivery cycles and shorter lead times.</value>
     <comment>Description</comment>
   </data>
   <data name="DEPLOYMENT_FREQUENCY.Name" xml:space="preserve">
@@ -230,7 +230,7 @@
     <comment>Name</comment>
   </data>
   <data name="WORKER_RETENTION_RATE.Desc" xml:space="preserve">
-    <value>Worker Retention Rate calculates the percentage of workers retained over a specified period. It reflects the organization's ability to retain its workforce, which is crucial for maintaining institutional knowledge, productivity, and morale. A high retention rate is generally indicative of a positive work environment and effective talent management practices.</value>
+    <value>Worker Retention Rate calculates the average time period of employing each worker. It reflects the organization's ability to retain its workforce, which is crucial for maintaining institutional knowledge, productivity, and morale. A high retention rate is generally indicative of a positive work environment and effective talent management practices.</value>
     <comment>Description</comment>
   </data>
   <data name="WORKER_RETENTION_RATE.Name" xml:space="preserve">

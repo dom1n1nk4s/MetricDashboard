@@ -50,7 +50,6 @@ namespace MetricDashboard.Services
                             await calc.First.Calculate();
                         }
                     }
-                    //TODO: calculate system scores here
                     var globalSettings = context.GlobalMetricSettings.First(x => x.Id == 1);
                     var metricSettings = context.RadialSettings.Include(x => x.ColorRanges).AsNoTracking().ToList();
                     var metricResults = context.MetricResults.AsNoTracking().GroupBy(x => x.MetricEnum)

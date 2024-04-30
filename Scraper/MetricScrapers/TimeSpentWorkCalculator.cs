@@ -35,7 +35,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var issues = _jira.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string issueKey, double countOfHoursPerTask)>();
-                foreach (var issue in issues)
+                foreach (var issue in issues.Where(x=>!x.Type.IsSubTask))
                 {
                     var hoursPerTask = (await issue.GetSubTasksAsync()).AsEnumerable()
                         .Select(x => (x.TimeTrackingData?.TimeSpentInSeconds ?? default) / (60.0 * 60.0)).Sum(); // to hours
