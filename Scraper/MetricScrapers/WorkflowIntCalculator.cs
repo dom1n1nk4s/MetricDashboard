@@ -9,7 +9,7 @@ using static System.TimeZoneInfo;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class WorkflowIntCalculator : IMetricCalculator
+    public class WorkflowIntCalculator : IMetricCalculator
     {
         /*
          * foreach issue
@@ -21,13 +21,13 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint);
          */
         public MetricEnum MetricEnum => MetricEnum.WORKFLOW_INTERRUPTION_TIME;
-        private readonly Jira _jira;
-        private readonly ILogger<Worker> _logger;
+        private readonly JiraService _jiraService;
+        private readonly ILogger<WorkflowIntCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public WorkflowIntCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public WorkflowIntCalculator(ILogger<WorkflowIntCalculator> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _logger = logger;
-            _jira = jiraService.GetInstance();
+            _jiraService = jiraService;
             _dbFactory = dbFactory;
         }
         public async Task Calculate()
@@ -37,15 +37,16 @@ namespace MetricDashboard.Scraper.MetricScrapers
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
                 var objectsAffectingScore = new List<(string issueKey, double durationOnHoldInHours)>();
-                var issues = _jira.GetCachedIssues(globalSettings);
+                var issues = _jiraService.GetCachedIssues(globalSettings);
                 foreach (var issue in issues.Where(x => !x.Type.IsSubTask))
                 {
-                    var changeLogs = await issue.GetChangeLogsAsync();
-                    var onHoldChanges = changeLogs.Where(x => x.Items.Any(y => y.FromValue == "On hold"));
+                    var changeLogs = (await _jiraService.GetChangeLogsAsync(issue)).OrderBy(x=>x.CreatedDate);
+                    var onHoldChanges = changeLogs.Where(x => x.Items.Any(y => y.ToValue.ToLower() == "on hold"));
                     var totalTimeOnHold = new TimeSpan();
                     foreach (var onHoldChange in onHoldChanges)
                     {
-                        var nextTransition = changeLogs.FirstOrDefault(x => x.CreatedDate > onHoldChange.CreatedDate && x.Items.Any(item => item.FieldName.Equals("status", StringComparison.OrdinalIgnoreCase)));
+                        var nextTransition = changeLogs.FirstOrDefault(x => x.CreatedDate > onHoldChange.CreatedDate &&
+                            x.Items.Any(item => item.FieldName.Equals("status", StringComparison.OrdinalIgnoreCase)));
                         if (nextTransition != null)
                         {
                             var durationOnHold = nextTransition.CreatedDate - onHoldChange.CreatedDate;

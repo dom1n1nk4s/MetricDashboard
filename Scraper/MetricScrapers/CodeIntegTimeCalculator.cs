@@ -9,7 +9,7 @@ using SharpBucket.V2;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class CodeIntegTimeCalculator : IMetricCalculator
+    public class CodeIntegTimeCalculator : IMetricCalculator
     {
         /*
          * foreach issue
@@ -21,13 +21,12 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint)
          */
         public MetricEnum MetricEnum => MetricEnum.CODE_INTEGRATION_TIME;
-        private readonly ILogger<Worker> _logger;
+        private readonly ILogger<CodeIntegTimeCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        private readonly Jira _jira;
-
-        public CodeIntegTimeCalculator(JiraService jira, IDbContextFactory<ApplicationDbContext> dbFactory, ILogger<Worker> logger)
+        private readonly JiraService _jiraService;
+        public CodeIntegTimeCalculator(JiraService jira, IDbContextFactory<ApplicationDbContext> dbFactory, ILogger<CodeIntegTimeCalculator> logger)
         {
-            _jira = jira.GetInstance();
+            _jiraService = jira;
             _dbFactory = dbFactory;
             _logger = logger;
         }
@@ -37,12 +36,12 @@ namespace MetricDashboard.Scraper.MetricScrapers
             try {
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-                var issues = _jira.GetCachedIssues(globalSettings);
+                var issues = _jiraService.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string issueKey, double hours)>();
 
                 foreach (var issue in issues.Where(x => x.Status.Name == "Done" && !x.Type.IsSubTask))
                 {
-                    var response = await _jira.RestClient.ExecuteRequestAsync<PullRequestResponse>(RestSharp.Method.GET,
+                    var response = await _jiraService.ExecuteRequestAsync<PullRequestResponse>(RestSharp.Method.GET,
                         $"/rest/dev-status/1.0/issue/detail?issueId={issue.JiraIdentifier}&applicationType=bitbucket&dataType=pullrequest");
                     var pullRequest = response.Detail.First().PullRequests.Where(x => x.Status.ToLower() == "merged").MaxByOrDefault(x => x.LastUpdate);
                     if (pullRequest == null)

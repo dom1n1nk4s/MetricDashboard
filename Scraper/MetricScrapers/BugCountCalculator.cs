@@ -7,20 +7,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class BugCountCalculator : IMetricCalculator
+    public class BugCountCalculator : IMetricCalculator
     {
         /*
          * select average bug count per last scope.
          * options: scope (default)
          */
         public MetricEnum MetricEnum => MetricEnum.BUG_COUNT;
-        private readonly Jira _jira;
-        private readonly ILogger<Worker> _logger;
+        private readonly JiraService _jiraService;
+        private readonly ILogger<BugCountCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public BugCountCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public BugCountCalculator(ILogger<BugCountCalculator> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _logger = logger;
-            _jira = jiraService.GetInstance();
+            _jiraService = jiraService;
             _dbFactory = dbFactory;
         }
         public async Task Calculate()
@@ -28,7 +28,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
             try {
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-                var issues = _jira.GetCachedIssues(globalSettings);
+                var issues = _jiraService.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string name, DateTime dateTime)>();
 
                 objectsAffectingScore = issues.Where(x => !x.Type.IsSubTask && x.Type.Name == "Bug")

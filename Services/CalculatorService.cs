@@ -13,13 +13,17 @@ namespace MetricDashboard.Services
         private readonly ILogger<Worker> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
         private readonly IEnumerable<IMetricCalculator> _calculators;
+        private readonly BitBucketService _bitBucketService;
+        private readonly JiraService _jiraService;
         public bool IsRunning { get; private set; }
 
-        public CalculatorService(ILogger<Worker> logger, IEnumerable<IMetricCalculator> calculators, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public CalculatorService(ILogger<Worker> logger, IEnumerable<IMetricCalculator> calculators, IDbContextFactory<ApplicationDbContext> dbFactory, BitBucketService bitBucketService, JiraService jiraService)
         {
             _logger = logger;
             _calculators = calculators;
             _dbFactory = dbFactory;
+            _bitBucketService = bitBucketService;
+            _jiraService = jiraService;
         }
 
         public async Task Run()
@@ -30,6 +34,8 @@ namespace MetricDashboard.Services
             }
 
             IsRunning = true;
+            _bitBucketService.GetCache(true);
+            _jiraService.GetCachedIssues(null,true);
 
             await CalculateMetrics();
 

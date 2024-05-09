@@ -3,7 +3,7 @@ using MetricDashboard.Data.Enums;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class SatSurveyCalculator : IMetricCalculator
+    public class SatSurveyCalculator : IMetricCalculator
     {
         /*
          * options: manual entry button for client satisfaction of core scrum survey numbers (get the ones that were used in workplace )

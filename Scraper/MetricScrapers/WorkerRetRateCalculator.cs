@@ -8,17 +8,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class WorkerRetRateCalculator : IMetricCalculator
+    public class WorkerRetRateCalculator : IMetricCalculator
     {
         public MetricEnum MetricEnum => MetricEnum.WORKER_RETENTION_RATE;
 
-        private readonly Jira _jira;
-        private readonly ILogger<Worker> _logger;
+        private readonly JiraService _jiraService;
+        private readonly ILogger<WorkerRetRateCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public WorkerRetRateCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public WorkerRetRateCalculator(ILogger<WorkerRetRateCalculator> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _logger = logger;
-            _jira = jiraService.GetInstance();
+            _jiraService = jiraService;
             _dbFactory = dbFactory;
         }
         public async Task Calculate()
@@ -27,13 +27,13 @@ namespace MetricDashboard.Scraper.MetricScrapers
             {
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = await _context.GlobalMetricSettings.FirstAsync(x => x.Id == 1);
-                var users = (await _jira.RestClient.ExecuteRequestAsync<List<JiraUser>>(RestSharp.Method.GET, "/rest/api/3/users/search")).Where(x => x.Locale != null).ToList();
+                var users = (await _jiraService.ExecuteRequestAsync<List<JiraUser>>(RestSharp.Method.GET, "/rest/api/3/users/search")).Where(x => x.Locale != null).ToList();
                 var objectsAffectingScore = new List<(string Name, DateTime ActiveFrom, DateTime ActiveTo)>();
                 foreach (var user in users)
                 {
-                    var issues = (await _jira.Issues.GetIssuesFromJqlAsync($"reporter = \"{user.AccountId}\" OR assignee = \"{user.AccountId}\"", maxIssues: 10000))
+                    var issues = (await _jiraService.GetIssuesFromJqlAsync($"reporter = \"{user.AccountId}\" OR assignee = \"{user.AccountId}\"", maxIssues: 10000))
                         .Select(x => x.Created).ToList();
-                    if(!issues.Any())
+                    if (!issues.Any())
                     {
                         continue;
                     }
@@ -73,7 +73,7 @@ namespace MetricDashboard.Scraper.MetricScrapers
             }
 
             double daysDifference = (endDate - startDate).TotalDays;
-            double monthsDifference = monthsApart + (daysDifference / daysInMonth);
+            double monthsDifference = Math.Max(monthsApart, (daysDifference / daysInMonth));
 
             return monthsDifference;
         }

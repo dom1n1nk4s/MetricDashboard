@@ -4,7 +4,7 @@ namespace MetricDashboard.Extensions
 {
     public static class EnumExtensions
     {
-        public static DateTime GetDateTime(this TimeScopeEnum timeScope, int sprintLength = 14)
+        public static DateTime GetDateTime(this TimeScopeEnum timeScope, int customScopeLength = 14)
         {
             DateTime now = DateTime.Now;
 
@@ -18,8 +18,8 @@ namespace MetricDashboard.Extensions
                     return now.AddDays(-14);
                 case TimeScopeEnum.ONE_WEEK:
                     return now.AddDays(-7);
-                case TimeScopeEnum.ONE_SPRINT:
-                    return now.AddDays(-sprintLength);
+                case TimeScopeEnum.CUSTOM_SCOPE:
+                    return now.AddDays(-customScopeLength);
                 default:
                     return now;
             }

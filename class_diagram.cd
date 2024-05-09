@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Comment CommentText="0">
+    <Position X="23.573" Y="8.74" Height="0.291" Width="0.7" />
+  </Comment>
+  <Class Name="MetricDashboard.Data.Models.ColorRange">
+    <Position X="14.5" Y="2.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AgACAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAkAAAAAA=</HashCode>
+      <FileName>Data\Models\ColorRange.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Color" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MetricDashboard.Data.Models.GlobalMetricSettings">
+    <Position X="17.5" Y="6.75" Width="2.25" />
+    <AssociationLine Name="Scope" Type="MetricDashboard.Data.Enums.TimeScopeEnum" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="18.906" Y="8.623" />
+        <Point X="18.906" Y="9.625" />
+        <Point X="19.75" Y="9.625" />
+        <Point X="19.75" Y="10" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>gAACAAAAABBgACAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\GlobalMetricSettings.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Scope" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MetricDashboard.Data.Models.Metric">
+    <Position X="14.75" Y="4.75" Width="2.5" />
+    <AssociationLine Name="RadialSettings" Type="MetricDashboard.Data.Models.RadialSettings" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="16.5" Y="4.75" />
+        <Point X="16.5" Y="3.438" />
+        <Point X="20.25" Y="3.438" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAgCAAAAAIAAAAAAAAAAAAEAAAAAAAEAgAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\Metric.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="MetricEnum" />
+      <Property Name="RadialSettings" />
+      <Property Name="System" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MetricDashboard.Data.Models.MetricResult">
+    <Position X="22.25" Y="9.25" Width="2.5" />
+    <AssociationLine Name="MetricEnum" Type="MetricDashboard.Data.Enums.MetricEnum" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="23.438" Y="9.25" />
+        <Point X="23.438" Y="6.438" />
+        <Point X="23.25" Y="6.438" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>QAgCAAAAAAAAAAgAAEAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\MetricResult.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="MetricEnum" />
+      <Property Name="TimeScope" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MetricDashboard.Data.Models.RadialSettings">
+    <Position X="20.25" Y="1.25" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="ColorRanges" Type="MetricDashboard.Data.Models.ColorRange" FixedToPoint="true">
+      <Path>
+        <Point X="20.25" Y="2.75" />
+        <Point X="16.25" Y="2.75" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.237" Y="0.173" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="MetricEnum" Type="MetricDashboard.Data.Enums.MetricEnum" FixedToPoint="true">
+      <Path>
+        <Point X="22.562" Y="3.574" />
+        <Point X="22.562" Y="4.75" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>QAoCAAAQACAAAAAAAAAAACAAAAAAAACAIAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\RadialSettings.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="MetricEnum" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="ColorRanges" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="MetricDashboard.Data.Models.SystemResult">
+    <Position X="15.25" Y="10" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>SAACAAAAAAAAAAgAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Models\SystemResult.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="SystemEnum" />
+      <Property Name="TimeScope" />
+    </ShowAsAssociation>
+  </Class>
+  <Enum Name="MetricDashboard.Data.Enums.ColorEnum">
+    <Position X="16" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAIAAAAAAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>Data\Enums\ColorEnum.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MetricDashboard.Data.Enums.MetricEnum">
+    <Position X="20.5" Y="4.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAgIACAAAgAAAgAQACIBAgAAAEhEAAAAAAAA=</HashCode>
+      <FileName>Data\Enums\MetricEnum.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MetricDashboard.Data.Enums.MetricSystemEnum">
+    <Position X="15.25" Y="8" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Data\Enums\MetricSystemEnum.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MetricDashboard.Data.Enums.TimeScopeEnum">
+    <Position X="19.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAgAAAAAAAAAAQAAAAAAAAAAAAQgAAAAAAAAIAA=</HashCode>
+      <FileName>Data\Enums\TimeScopeEnum.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

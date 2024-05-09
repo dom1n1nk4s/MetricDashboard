@@ -8,7 +8,7 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class TaskHandoverCalculator : IMetricCalculator
+    public class TaskHandoverCalculator : IMetricCalculator
     {
         /*
          * foreach task
@@ -20,13 +20,13 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint);
          */
         public MetricEnum MetricEnum => MetricEnum.TASK_HANDOVERS_BEFORE_COMPLETION;
-        private readonly Jira _jira;
-        private readonly ILogger<Worker> _logger;
+        private readonly JiraService _jiraService;
+        private readonly ILogger<TaskHandoverCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public TaskHandoverCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public TaskHandoverCalculator(ILogger<TaskHandoverCalculator> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _logger = logger;
-            _jira = jiraService.GetInstance();
+            _jiraService = jiraService;
             _dbFactory = dbFactory;
         }
         public async Task Calculate()
@@ -35,13 +35,13 @@ namespace MetricDashboard.Scraper.MetricScrapers
             {
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-                var issues = _jira.GetCachedIssues(globalSettings);
+                var issues = _jiraService.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string issueKey, int countOfPeopleWorking)>();
                 var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze" };
                 foreach (var issue in issues)
                 {
-                    var countOfPeopleWorking = (await issue.GetSubTasksAsync()).AsEnumerable()
-                        .Where(x => notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y))).Select(x => x.Assignee).Distinct().Count();
+                    var countOfPeopleWorking = (await _jiraService.GetSubtasks(issue)).AsEnumerable()
+                        .Where(x => !notProgrammingRelatedTasks.Any(y => x.Summary.ToLower().Contains(y))).Select(x => x.Assignee).Distinct().Count();
                     if(countOfPeopleWorking == 0)
                     {
                         continue;

@@ -10,20 +10,20 @@ using SharpBucket.V2;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class DeployFreqCalculator : IMetricCalculator
+    public class DeployFreqCalculator : IMetricCalculator
     {
         /*
          * get total deployment count for scope
          * options: scope (for the previous 6 months, month, week, sprint)
          */
         public MetricEnum MetricEnum => MetricEnum.DEPLOYMENT_FREQUENCY;
-        private readonly SharpBucketV2 _bitbucket;
-        private readonly ILogger<Worker> _logger;
+        private readonly BitBucketService _bitbucketService;
+        private readonly ILogger<DeployFreqCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
-        public DeployFreqCalculator(BitBucketService bitbucket, ILogger<Worker> logger, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public DeployFreqCalculator(BitBucketService bitbucket, ILogger<DeployFreqCalculator> logger, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
-            _bitbucket = bitbucket.GetInstance();
+            _bitbucketService = bitbucket;
             _logger = logger;
             _dbFactory = dbFactory;
         }
@@ -33,22 +33,21 @@ namespace MetricDashboard.Scraper.MetricScrapers
             try
             {
                 using var _context = _dbFactory.CreateDbContext();
-                (var user, var repos) = _bitbucket.GetCache();
+                (var user, var repos) = _bitbucketService.GetCache();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-                var workspace = _bitbucket.WorkspacesEndPoint().ListWorkspaces().First(); //TODO: MOVE TO OPTIONS AS PRIMARY WORKSPACE (low priority)
+                var workspace = _bitbucketService.GetWorkspace();
                 var scopeDateTime = globalSettings.Scope.GetDateTime(globalSettings.SprintLength);
                 var prodCommitsForRepositories = new Dictionary<string, List<DateTime?>>();
                 var objectsAffectingScore = new List<(string repoKey, double deploymentCount)>();
                 foreach (var repo in repos)
                 {
-                    var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
-                    var environments = await repoResource.EnvironmentsResource.ListEnvironmentsAsync();
+                    var environments = await _bitbucketService.ListEnvironmentsAsync(user.display_name,repo.name);
                     var prodEnvironmentUUID = environments.First(x => x.name.ToLower().Contains("prod")).uuid;
-                    var deployments = await _bitbucket.GetAsync<DeploymentResponse>
-                        ($"/repositories/{workspace.slug}/{repo.slug}/deployments?q=self.state.completed_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}",
+                    var deployments = await _bitbucketService.GetAsync<DeploymentResponse>
+                        ($"/repositories/{workspace.slug}/{repo.slug}/deployments?q=self.state.completed_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:00zzz")}",
                         new CancellationToken());
 
-                    var prodDeployments = deployments.Values.Where(x => x.State.Name == "COMPLETED" && x.Environment.Uuid == prodEnvironmentUUID)
+                    var prodDeployments = deployments.Values.Where(x => x.State.Name.ToUpper() == "COMPLETED" && x.Environment.Uuid == prodEnvironmentUUID)
                         .ToList();
                     if (!prodDeployments?.Any() ?? true)
                     {

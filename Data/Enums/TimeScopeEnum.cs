@@ -13,7 +13,7 @@ namespace MetricDashboard.Data.Enums
         TWO_WEEKS,
         [Display(Description = "One week")]
         ONE_WEEK,
-        [Display(Description = "One sprint")]
-        ONE_SPRINT,
+        [Display(Description = "Custom scope")]
+        CUSTOM_SCOPE,
     }
 }

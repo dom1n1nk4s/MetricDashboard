@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class TimeSpentWorkCalculator : IMetricCalculator
+    public class TimeSpentWorkCalculator : IMetricCalculator
     {
         /*
          * foreach task
@@ -17,27 +17,26 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint);
          */
         public MetricEnum MetricEnum => MetricEnum.TIME_SPENT_WORKING;
-        private readonly Jira _jira;
-        private readonly ILogger<Worker> _logger;
+        private readonly JiraService _jiraService;
+        private readonly ILogger<TimeSpentWorkCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public TimeSpentWorkCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public TimeSpentWorkCalculator(ILogger<TimeSpentWorkCalculator> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _logger = logger;
-            _jira = jiraService.GetInstance();
+            _jiraService = jiraService;
             _dbFactory = dbFactory;
         }
         public async Task Calculate()
         {
             try
             {
-
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-                var issues = _jira.GetCachedIssues(globalSettings);
+                var issues = _jiraService.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string issueKey, double countOfHoursPerTask)>();
                 foreach (var issue in issues.Where(x=>!x.Type.IsSubTask))
                 {
-                    var hoursPerTask = (await issue.GetSubTasksAsync()).AsEnumerable()
+                    var hoursPerTask = (await _jiraService.GetSubtasks(issue)).AsEnumerable()
                         .Select(x => (x.TimeTrackingData?.TimeSpentInSeconds ?? default) / (60.0 * 60.0)).Sum(); // to hours
                     objectsAffectingScore.Add((issue.Key.Value, hoursPerTask));
                 }

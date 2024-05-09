@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class BusinessValuePercCalculator : IMetricCalculator
+    public class BusinessValuePercCalculator : IMetricCalculator
     {
         /*
          * foreach task: filter out each substask containing words "PR, Code review, Analysis, etc.", then get all timesheet allocated hours on the subtasks which are left.
@@ -17,13 +17,14 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint)
          */
         public MetricEnum MetricEnum => MetricEnum.BUSINESS_VALUE_PERCENTAGE;
-        private readonly Jira _jira;
-        private readonly ILogger<Worker> _logger;
+
+        private readonly JiraService _jiraService;
+        private readonly ILogger<BusinessValuePercCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
-        public BusinessValuePercCalculator(ILogger<Worker> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
+        public BusinessValuePercCalculator(ILogger<BusinessValuePercCalculator> logger, JiraService jiraService, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _logger = logger;
-            _jira = jiraService.GetInstance();
+            _jiraService = jiraService;
             _dbFactory = dbFactory;
         }
         public async Task Calculate()
@@ -32,12 +33,12 @@ namespace MetricDashboard.Scraper.MetricScrapers
             {
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
-                var issues = _jira.GetCachedIssues(globalSettings);
+                var issues = _jiraService.GetCachedIssues(globalSettings);
                 var objectsAffectingScore = new List<(string issueKey, double countOfHoursWorking, double countOfTotalHours)>();
                 var notProgrammingRelatedTasks = new string[] { "analysis", "test", "analyse", "analyze", "code review", "PR", "pull request", "merge request" };
                 foreach (var issue in issues.Where(x => !x.Type.IsSubTask))
                 {
-                    var subtasks = (await issue.GetSubTasksAsync()).ToList();
+                    var subtasks = (await _jiraService.GetSubtasks(issue)).ToList();
                     var countOfTotalHours = subtasks
                         .Select(x => x.TimeTrackingData.TimeSpentInSeconds ?? 0 / (60.0 * 60.0)).Sum(); // to hours
                     if (countOfTotalHours == 0)

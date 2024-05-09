@@ -10,7 +10,7 @@ using SharpBucket.V2.Pocos;
 
 namespace MetricDashboard.Scraper.MetricScrapers
 {
-    internal class CodeReviewPartCalculator : IMetricCalculator
+    public class CodeReviewPartCalculator : IMetricCalculator
     {
         /*
          * 
@@ -22,22 +22,22 @@ namespace MetricDashboard.Scraper.MetricScrapers
          * options: scope (for the previous 6 months, month, week, sprint)
          */
         public MetricEnum MetricEnum => MetricEnum.CODE_REVIEW_PARTICIPATION;
-        private readonly SharpBucketV2 _bitbucket;
-        private readonly ILogger<Worker> _logger;
+        private readonly BitBucketService _bitbucketService;
+        private readonly ILogger<CodeReviewPartCalculator> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
-        public CodeReviewPartCalculator(IDbContextFactory<ApplicationDbContext> dbFactory, ILogger<Worker> logger, BitBucketService bitbucket)
+        public CodeReviewPartCalculator(IDbContextFactory<ApplicationDbContext> dbFactory, ILogger<CodeReviewPartCalculator> logger, BitBucketService bitbucket)
         {
             _dbFactory = dbFactory;
             _logger = logger;
-            _bitbucket = bitbucket.GetInstance();
+            _bitbucketService = bitbucket;
         }
 
         public async Task Calculate()
         {
             try
             {
-                (var user, var repos) = _bitbucket.GetCache();
+                (var user, var repos) = _bitbucketService.GetCache();
                 var objectsAffectingScore = new List<(string pullRequestName, double participationPercent)>();
                 using var _context = _dbFactory.CreateDbContext();
                 var globalSettings = _context.GlobalMetricSettings.AsNoTracking().First(x => x.Id == 1);
@@ -45,23 +45,21 @@ namespace MetricDashboard.Scraper.MetricScrapers
 
                 foreach (var repo in repos)
                 {
-                    var repoResource = _bitbucket.RepositoriesEndPoint().RepositoryResource(user.display_name, repo.name);
-
-                    var pullRequests = repoResource.PullRequestsResource()
-                        .ListPullRequests(new ListPullRequestsParameters
+                    var pullRequests = _bitbucketService
+                        .ListPullRequests(user.display_name, repo.name, new ListPullRequestsParameters
                         {
                             States = Enum.GetValues(typeof(PullRequestState)).Cast<PullRequestState>().ToList(),
-                            Filter = $"created_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:sszzz")}"
+                            Filter = $"created_on > {scopeDateTime.ToString("yyyy-MM-ddTHH:mm:00zzz")}"
                         });
                     foreach (var stubPullRequest in pullRequests)
                     {
-                        var pullRequest =await repoResource.PullRequestsResource().PullRequestResource(stubPullRequest.id.Value).GetPullRequestAsync();
-                        var activities = repoResource.PullRequestsResource().PullRequestResource(pullRequest.id.Value).ListPullRequestActivities();
+                        var pullRequest = await _bitbucketService.GetPullRequestAsync(user.display_name, repo.name, stubPullRequest.id.Value);
+                        var activities = _bitbucketService.ListPullRequestActivities(user.display_name, repo.name, stubPullRequest.id.Value);
                         var uniqueApprovals = activities.Where(x => x.approval != null).Select(x => x.approval.user.account_id).ToList();
                         var uniqueComments = activities.Where(x => x.comment != null).Select(x => x.comment.user.account_id).ToList();
 
                         var activeParticipantCount = uniqueApprovals.Concat(uniqueComments).Distinct().Count() * 1.0;
-                        objectsAffectingScore.Add((pullRequest.title, 100*activeParticipantCount / Math.Max(pullRequest?.reviewers?.Count ?? 1, 1)));
+                        objectsAffectingScore.Add((pullRequest.title, 100 * activeParticipantCount / Math.Max(pullRequest?.reviewers?.Count ?? 1, 1)));
                     }
                 }
 
