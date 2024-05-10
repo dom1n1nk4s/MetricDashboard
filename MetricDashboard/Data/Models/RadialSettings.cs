@@ -13,7 +13,6 @@ namespace MetricDashboard.Data.Models
         public int End { get; set; } = 260;
         public int Step { get; set; } = 26;
         public string PointerUnits { get; set; } = string.Empty;
-        //TODO: insert scoring overrides here.
         public ColorEnum GetColor(double pointerValue)
         {
             if(!ColorRanges.Any())

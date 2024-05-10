@@ -16,6 +16,7 @@ namespace MetricDashboard.Services
         private readonly BitBucketService _bitBucketService;
         private readonly JiraService _jiraService;
         public bool IsRunning { get; private set; }
+        public string Status { get; private set; } = "STOPPED";
 
         public CalculatorService(ILogger<Worker> logger, IEnumerable<IMetricCalculator> calculators, IDbContextFactory<ApplicationDbContext> dbFactory, BitBucketService bitBucketService, JiraService jiraService)
         {
@@ -34,11 +35,13 @@ namespace MetricDashboard.Services
             }
 
             IsRunning = true;
+            Status = "Getting cache...";
             _bitBucketService.GetCache(true);
             _jiraService.GetCachedIssues(null,true);
 
             await CalculateMetrics();
 
+            Status = "STOPPED";
             IsRunning = false;
         }
 
@@ -51,11 +54,13 @@ namespace MetricDashboard.Services
                     var metricDAOs = (await context.Metrics.AsNoTracking().ToListAsync()).OrderBy(x => x.MetricEnum).ToList();
                     foreach (var calc in _calculators.ToList().OrderBy(x => x.MetricEnum).Zip(metricDAOs))
                     {
+                        Status = $"Calculating metric {calc.Second.MetricEnum}";
                         if (!calc.Second.IsDisabled)
                         {
                             await calc.First.Calculate();
                         }
                     }
+                        Status = "Calculating system results...";
                     var globalSettings = context.GlobalMetricSettings.First(x => x.Id == 1);
                     var metricSettings = context.RadialSettings.Include(x => x.ColorRanges).AsNoTracking().ToList();
                     var metricResults = context.MetricResults.AsNoTracking().GroupBy(x => x.MetricEnum)

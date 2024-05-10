@@ -15,7 +15,7 @@
                 <RadzenText Text="@runningStatus"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="4">
-                <RadzenButton Text="Start calculation" Disabled=@isRunning Click="@(() => _calculatorService.Run())"/>
+                <RadzenButton Text="Start calculation" Disabled=@isRunning Click="RunCalculator"/>
             </RadzenColumn>
         </RadzenRow>
         <RadzenRow AlignItems="AlignItems.Center">
@@ -66,15 +66,21 @@
     ApplicationDbContext _context;
     GlobalMetricSettings globalSettings;
     string name => "Global settings";
-    string runningStatus => _calculatorService.IsRunning ? "RUNNING" : "STOPPED";
+    string runningStatus => _calculatorService.Status;
     bool isRunning => _calculatorService.IsRunning;
+    async Task RunCalculator()
+    {
+        await using var timer = new Timer(_ => InvokeAsync(() => StateHasChanged()));
+        timer.Change(TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
+        await _calculatorService.Run();
+    }
     async Task Save()
     {
         try
         {
             _context ??= _dbFactory.CreateDbContext();
             
-            _context.SaveChanges(); //this might cause problems later on when saving a shit ton of data at once
+            _context.SaveChanges(); 
         }
         catch (Exception e)
         {
